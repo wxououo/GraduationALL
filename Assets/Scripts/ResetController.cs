@@ -12,16 +12,19 @@ public class ResetController : MonoBehaviour
         PlayerPrefs.SetInt("IsUnlocked", 0);
         PlayerPrefs.SetInt(BoxLidStateKey, 0);
         ResetInventory();
-        
+
         foreach (var itemPickup in FindObjectsOfType<ItemPickup>())
         {
             itemPickup.ResetItem(); // 回到初始狀態
         }
 
-        foreach (var puzzlePiece in FindObjectsOfType<PuzzlePiece>())
-        {
-            puzzlePiece.ResetPiece();
-        }
+        // foreach (var puzzlePiece in FindObjectsOfType<PuzzlePiece>())
+        // {
+        //     puzzlePiece.ResetPiece();
+        // }
+
+        ResetPuzzlePieces();
+        ResetPuzzleSlots();
 
         // 重置箱子蓋子
         foreach (var boxLid in FindObjectsOfType<BoxLidController>())
@@ -45,4 +48,44 @@ public class ResetController : MonoBehaviour
         PlayerPrefs.DeleteKey("ItemCount");
     }
 
+    private void ResetPuzzlePieces()
+    {
+        // Find all puzzle pieces in the scene
+        PuzzlePiece[] puzzlePieces = FindObjectsOfType<PuzzlePiece>();
+
+        foreach (PuzzlePiece piece in puzzlePieces)
+        {
+            // 直接回到場景中的起始位置
+            piece.ReturnToStartPosition();
+        }
+    }
+    private void ResetPuzzleSlots()
+    {
+        // Find all puzzle slots in the scene
+        PuzzleSlot[] puzzleSlots = FindObjectsOfType<PuzzleSlot>();
+
+        foreach (PuzzleSlot slot in puzzleSlots)
+        {
+            // Reset slot to grayscale and mark as unoccupied
+            slot.SetToGrayscale();
+
+            // Remove any child puzzle pieces
+            foreach (Transform child in slot.transform)
+            {
+                if (child.GetComponent<PuzzlePiece>() != null)
+                {
+                    Destroy(child.gameObject);
+                }
+            }
+
+            // Update the slot's occupied state
+            slot.SetToOccupied(false);
+
+            // Clear any saved slot states
+            PlayerPrefs.DeleteKey($"Slot_{slot.slotID}_Occupied");
+        }
+
+        // 清除拼圖狀態
+        PlayerPrefs.DeleteKey("PuzzleCompleted");
+    }
 }

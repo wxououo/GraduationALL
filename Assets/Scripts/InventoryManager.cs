@@ -97,6 +97,9 @@ public class InventoryManager : MonoBehaviour
         AddEvent(eventTrigger, EventTriggerType.BeginDrag, (data) => OnBeginDrag(obj));
         AddEvent(eventTrigger, EventTriggerType.Drag, (data) => OnDrag(obj));
         AddEvent(eventTrigger, EventTriggerType.EndDrag, (data) => OnEndDrag(obj, item));
+
+        PuzzlePiece puzzlePiece = obj.GetComponent<PuzzlePiece>() ?? obj.AddComponent<PuzzlePiece>();
+        puzzlePiece.SetItemData(item);
     }
 
     private void AddEvent(EventTrigger trigger, EventTriggerType type, System.Action<BaseEventData> action)
@@ -219,7 +222,6 @@ public class InventoryManager : MonoBehaviour
                 puzzlePiece = spawnedItem.AddComponent<PuzzlePiece>();
             }
 
-            puzzlePiece.Initialize(item);
             // 從道具欄中移除
             Remove(item);
             ListItems();
@@ -303,13 +305,6 @@ public class InventoryManager : MonoBehaviour
     // }
     public Item FindItemByID(int id)
     {
-        foreach (Item item in allItems)
-        {
-            if (item.id == id)
-            {
-                return item;
-            }
-        }
-        return null;  // 如果沒有找到對應的道具，返回 null
+        return allItems.Find(item => item.id == id);
     }
 }

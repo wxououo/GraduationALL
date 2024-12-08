@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
-
+using System.Linq;
 public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
     private Vector3 startPosition; // Original position to return to if not placed correctly
@@ -11,84 +11,90 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
     public Item itemData;
     //public bool isPlacedCorrectly = false;
 
-    public void Initialize(Item item)
-    {
-        if (item == null)
-        {
-            string pieceName = gameObject.name;
-            Debug.Log($"Attempting to find item for piece name: {pieceName}");
-            // First, try finding by name
-            item = InventoryManager.Instance.allItems.Find(i => i.itemName == pieceName);
-            if (item == null)
-            {
-                // Try extracting an ID from the name
-                int.TryParse(pieceName.Replace("Wedding_", ""), out int itemId);
-                item = InventoryManager.Instance.FindItemByID(itemId);
-            }
-
-            // If still not found, provide a default item
-            if (item == null)
-            {
-                Debug.LogError($"Cannot initialize PuzzlePiece: Absolute item data failure for {gameObject.name}");
-                item = new Item { itemName = "Default", id = -1 };
-            }
-        }
-        if (item == null)
-        {
-            Debug.LogError($"Cannot initialize PuzzlePiece: Absolute item data failure for {gameObject.name}");
-
-            return;
-        }
-        itemData = item;
-        gameObject.name = $"Wedding_{item.itemName}";
-        Debug.Log($"Successfully initialized PuzzlePiece with Item: {item.itemName}");
-    }
-    private int ExtractItemIdFromName()
-    {
-        // Implement a method to extract item ID from the piece's name or other identifier
-        // For example:
-        string pieceName = gameObject.name;
-        int itemId;
-        if (int.TryParse(pieceName.Replace("PuzzlePiece_", ""), out itemId))
-        {
-            return itemId;
-        }
-        return -1;
-    }
-    // public string GetItemName()
+    // public void Initialize(Item item)
     // {
-    //     return itemData != null ? itemData.itemName : "Unknown";
+    //     if (item == null)
+    //     {
+    //         string pieceName = gameObject.name;
+    //         Debug.Log($"Attempting to find item for piece name: {pieceName}");
+    //         // First, try finding by name
+    //         item = InventoryManager.Instance.allItems.Find(i => i.itemName == pieceName);
+    //         if (item == null)
+    //         {
+    //             // Try extracting an ID from the name
+    //             int.TryParse(pieceName.Replace("Wedding_", ""), out int itemId);
+    //             item = InventoryManager.Instance.FindItemByID(itemId);
+    //         }
+
+    //         // If still not found, provide a default item
+    //         if (item == null)
+    //         {
+    //             Debug.LogError($"Cannot initialize PuzzlePiece: Absolute item data failure for {gameObject.name}");
+    //             item = new Item { itemName = "Default", id = -1 };
+    //         }
+    //     }
+    //     if (item == null)
+    //     {
+    //         Debug.LogError($"Cannot initialize PuzzlePiece: Absolute item data failure for {gameObject.name}");
+
+    //         return;
+    //     }
+    //     itemData = item;
+    //     gameObject.name = $"Wedding_{item.itemName}";
+    //     Debug.Log($"Successfully initialized PuzzlePiece with Item: {item.itemName}");
     // }
 
-    // public Item GetItemData()
-    // {
-    //     return itemData;
-    // }
 
     private void Start()
     {
         startPosition = transform.position;
         originalParent = transform.parent;
         playerCamera = Camera.main; // 找到主攝影機
-        //InventoryManager.Instance.RegisterPuzzlePiece(this.gameObject, itemData);
         if (itemData == null)
         {
-            Initialize(null);
+            TryFindItemData();
         }
-        // if (itemData == null)
-        // {
-        //     string pieceName = gameObject.name;
-        //     int itemId;
-        //     if (int.TryParse(pieceName.Replace("PuzzlePiece_", ""), out itemId))
-        //     {
-        //         itemData = InventoryManager.Instance.FindItemByID(itemId);
-        //     }
+        //InventoryManager.Instance.RegisterPuzzlePiece(this.gameObject, itemData);
 
-        //     if (itemData == null)
-        //     {
-        //         Debug.LogError($"Cannot find item data for {gameObject.name}");
-        //     }
-        // }
+    }
+    public void SetItemData(Item item)
+    {
+        if (item != null)
+        {
+            itemData = item;
+            gameObject.name = item.itemName;  // 確保名稱與 Item 一致
+            Debug.Log($"Item data set: {item.itemName}");
+        }
+        else
+        {
+            Debug.LogError("Attempting to set null item data");
+        }
+    }
+    private void TryFindItemData()
+    {
+        if (InventoryManager.Instance == null)
+        {
+            Debug.LogError("InventoryManager.Instance is null!");
+            return;
+        }
+
+        // 打印一些診斷信息
+        Debug.Log($"Attempting to find item data for GameObject: {gameObject.name}");
+        Debug.Log($"Total items in inventory: {InventoryManager.Instance.allItems.Count}");
+
+        // 這裡要特別注意，因為你提到生成的物件名稱是 "InventoryItem 3d(Clone)"
+        string originalItemName = gameObject.name.Replace("(Clone)", "");
+
+        Item foundItem = InventoryManager.Instance.allItems.Find(item =>
+            item.itemName == originalItemName || // 精確匹配原始名稱
+            originalItemName.Contains(item.itemName) // 部分包含
+        );
+
+        if (foundItem != null)
+        {
+            itemData = foundItem;
+            Debug.Log($"Successfully found item data: {itemData.itemName}");
+        }
     }
 
     // private void PlacePieceAtSavedPosition()
@@ -107,6 +113,15 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
     public void OnBeginDrag(PointerEventData eventData)
     {
         //if (isPlacedCorrectly) return;
+        if (itemData == null)
+        {
+            TryFindItemData();
+        }
+        CanvasGroup canvasGroup = GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+        {
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
+        }
         GetComponent<CanvasGroup>().blocksRaycasts = false; // Allows dragging through UI
         transform.SetParent(null);  // 讓拼圖碎片不再隸屬 Canvas，使其能夠移動到 3D 場景中
     }
@@ -127,6 +142,15 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        CanvasGroup canvasGroup = GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+        {
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
+        }
+        if (itemData == null)
+        {
+            TryFindItemData();
+        }
         if (playerCamera == null)
         {
             playerCamera = Camera.main;
@@ -144,17 +168,7 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             ReturnToStartPosition();
             return;
         }
-        // if (itemData == null)
-        // {
-        //     Debug.LogError($"OnEndDrag: {gameObject.name} has no item data");
-        //     ReturnToStartPosition();
-        //     return;
-        // }
-        // bool isPlacedCorrectly = PuzzleManager.Instance.PlacePuzzlePiece(this);
-        // if (!isPlacedCorrectly)
-        // {
-        //     ReturnToStartPosition();
-        // }
+
         Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit) && hit.collider.CompareTag("Puzzle"))
@@ -187,12 +201,12 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
     // Method to snap the piece into the correct slot
     public void PlacePiece(Vector3 targetPosition)
     {
-        // if (itemData == null)
-        // {
-        //     Debug.LogError($"Attempting to place piece {gameObject.name} with null item data");
-        //     return;
-        // }
         transform.position = targetPosition;
+        CanvasGroup canvasGroup = GetComponent<CanvasGroup>();
+        if (canvasGroup == null)
+        {
+            canvasGroup = gameObject.AddComponent<CanvasGroup>();
+        }
         //     if (originalParent != null)
         // {
         //     transform.SetParent(originalParent);

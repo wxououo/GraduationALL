@@ -17,7 +17,7 @@ public class SceneTransitions : MonoBehaviour
     IEnumerator LoadScene()
     {
         transitionAnim.SetTrigger("end"); // 播放過渡動畫
-        yield return new WaitForSeconds(1.5f); // 等待動畫播放結束
+        yield return new WaitForSeconds(1f); // 等待動畫播放結束
         SceneManager.LoadScene(sceneName); // 切換場景
     }
 }

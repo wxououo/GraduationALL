@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Wedding_4
   m_EditorClassIdentifier: 
   id: 3
-  itemName: pic4
+  itemName: "\u7167\u7247\u7684\u788E\u7247"
   icon: {fileID: 21300000, guid: 049088481a87f408ab0f15dcfaea2a08, type: 3}
   prefab: {fileID: 4256516777286812225, guid: bc287fb6106f54c5fb7cd66f92659ee1, type: 3}
   isPuzzlePiece: 1

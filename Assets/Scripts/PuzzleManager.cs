@@ -14,60 +14,76 @@ public class PuzzleManager : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        //LoadPuzzleState();
+        LoadPuzzleState();
     }
 
+    private void LoadPuzzleState()
+    {
 
-    //     private void LoadPuzzleState()
-    // {
-    //     foreach (Transform slot in puzzleSlots)
-    //     {
-    //         int savedItemId = PlayerPrefs.GetInt($"PuzzleSlot_{slot.GetInstanceID()}", 0);
+        // 遍歷所有拼圖插槽
+        foreach (Transform slot in puzzleSlots)
+        {
+            if (slot == null) continue;
 
-    //         if (savedItemId != 0)
-    //         {
-    //             bool foundPiece = false;
+            PuzzleSlot slotComponent = slot.GetComponent<PuzzleSlot>();
+            if (slotComponent == null)
+            {
+                Debug.LogError($"No PuzzleSlot component found on {slot.name}");
+                continue;
+            }
+            slotComponent.EnsureInitialized();
+            // 檢查這個插槽是否在之前已被佔據
+            bool wasOccupied = PlayerPrefs.GetInt($"Slot_{slotComponent.slotID}_Occupied", 0) == 1;
 
-    //             foreach (PuzzlePiece piece in FindObjectsOfType<PuzzlePiece>())
-    //             {
-    //                 if (piece.itemData != null && piece.itemData.id == savedItemId)
-    //                 {
-    //                     piece.PlacePiece(slot.position);
-    //                     piece.transform.SetParent(slot);
-    //                     ChangeSlotAppearance(slot);
-    //                     Debug.Log($"Loaded PuzzlePiece {piece.itemData.itemName} in slot {slot.name}.");
-    //                     foundPiece = true;
-    //                     break;
-    //                 }
-    //             }
+            if (wasOccupied)
+            {
+                // 找到對應ID的拼圖碎片
+                PuzzlePiece matchingPiece = FindMatchingPuzzlePiece(slotComponent.slotID);
 
-    //             if (!foundPiece)
-    //             {
-    //                 Debug.LogWarning($"No matching puzzle piece found for slot {slot.name} with saved ID {savedItemId}.");
-    //             }
-    //         }
-    //     }
-    // }
+                if (matchingPiece != null)
+                {
+                    // 將拼圖碎片放置到插槽
+                    matchingPiece.PlacePiece(slot.position);
+                    matchingPiece.transform.SetParent(slot);
+                    slotComponent.SetToOccupied(true);
+                    ChangeSlotAppearance(slot); // 變成彩色
 
-    // private void SavePuzzleState(PuzzlePiece piece, Transform slot)
-    // {
-    //     PlayerPrefs.SetInt($"PuzzleSlot_{slot.GetInstanceID()}", piece.itemData.id);
-    //     PlayerPrefs.SetInt($"PuzzlePiece_{piece.itemData.id}", 1); // 標記此拼圖已放置
-    //     PlayerPrefs.Save();
-    //     Debug.Log($"Saved PuzzlePiece {piece.itemData.itemName} in slot {slot.name}.");
-    // }
+                    // 從物品欄移除
+                    if (InventoryManager.Instance != null)
+                    {
+                        InventoryManager.Instance.Remove(matchingPiece.itemData);
+                    }
+                }
+            }
+        }
+    }
+
+    private PuzzlePiece FindMatchingPuzzlePiece(int slotID)
+    {
+        // 尋找匹配插槽ID的拼圖碎片
+        PuzzlePiece[] allPieces = FindObjectsOfType<PuzzlePiece>();
+        foreach (PuzzlePiece piece in allPieces)
+        {
+            if (piece.itemData != null && piece.itemData.id == slotID)
+            {
+                return piece;
+            }
+        }
+        return null;
+    }
     public bool PlacePuzzlePiece(PuzzlePiece puzzlePiece)
     {
         if (puzzlePiece == null)
-    {
-        Debug.LogError("PlacePuzzlePiece received null PuzzlePiece!");
-        return false;
-    }
+        {
+            Debug.LogError("PlacePuzzlePiece received null PuzzlePiece!");
+            return false;
+        }
 
-    Debug.Log($"Attempting to place puzzle piece: {puzzlePiece.name}");
+        Debug.Log($"Attempting to place puzzle piece: {puzzlePiece.name}");
         // 檢查拼圖是否可以被放置在槽位中
         if (CheckPuzzlePiecePlacement(puzzlePiece))
         {
+            SaveSlotState();
             return true;
         }
         else
@@ -76,15 +92,22 @@ public class PuzzleManager : MonoBehaviour
             return false;
         }
     }
-
+    private void SaveSlotState()
+    {
+        // 遍歷所有插槽並保存其佔據狀態
+        foreach (Transform slot in puzzleSlots)
+        {
+            PuzzleSlot slotComponent = slot.GetComponent<PuzzleSlot>();
+            if (slotComponent != null)
+            {
+                // 保存插槽是否被佔據的狀態
+                PlayerPrefs.SetInt($"Slot_{slotComponent.slotID}_Occupied", slotComponent.IsOccupied() ? 1 : 0);
+            }
+        }
+        PlayerPrefs.Save();
+    }
     public bool CheckPuzzlePiecePlacement(PuzzlePiece puzzlePiece)
     {
-        // if (puzzlePiece.itemData == null)
-        // {
-        //     Debug.LogError($"PuzzlePiece {puzzlePiece.name} has a null itemData.");
-        //     return false;
-        // }
-        // Loop through each puzzle slot to see if the piece is close enough to snap
         foreach (Transform slot in puzzleSlots)
         {
 
@@ -118,7 +141,8 @@ public class PuzzleManager : MonoBehaviour
                     return false; // 如果槽已經被佔據，不允許放置
                 }
                 if (slotComponent.slotID == puzzlePiece.itemData.id)
-                {    puzzlePiece.PlacePiece(slot.position);
+                {
+                    puzzlePiece.PlacePiece(slot.position);
                     Debug.Log("Puzzle piece fits into slot");
 
                     puzzlePiece.transform.SetParent(slot);
@@ -161,7 +185,7 @@ public class PuzzleManager : MonoBehaviour
             }
 
             PuzzlePiece placedPiece = slot.GetComponentInChildren<PuzzlePiece>();
-            
+
         }
 
         isPuzzleCompleted = true;
@@ -174,7 +198,6 @@ public class PuzzleManager : MonoBehaviour
     {
         // 拼圖完成後觸發的邏輯，可以是動畫、開門等
         Debug.Log("Trigger puzzle completion event.");
-        // Example: DoorManager.Instance.OpenDoor();
     }
 
     // public Transform GetSlotForPiece(PuzzlePiece piece)
