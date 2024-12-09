@@ -1,47 +1,64 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
-public class ZoomCursorHandler : MonoBehaviour
+public class CursorManager : MonoBehaviour
 {
-    public Texture2D zoomCursorTexture; 
-    public Texture2D PickCursorTexture; 
-    private Vector2 cursorHotspot; // «ü¼ĞªºµJÂI¦ì¸m
-    private Texture2D defaultCursorTexture; // ¹w³]·Æ¹««ü¼Ğ
-    private Vector2 defaultHotspot;
-    public bool requiresZoom = false; // ¬O§_»İ­nÃèÀY©ñ¤j¤~¯à¤Á´«³õ´º
-    private MouseLook cameraController; // ¥Î¨ÓÀË¬dÃèÀY¬O§_¤w½Õ¾ã
+    [SerializeField] private Texture2D ZoomCursor; // Zoomç›®æ¨™çš„é¼ æ¨™æ¨£å¼
+    [SerializeField] private Texture2D PickCursor; // å¯æ‹¾å–ç›®æ¨™çš„é¼ æ¨™æ¨£å¼
+    private Vector2 cursorHotspot;
+    private MouseLook cameraController; // æª¢æŸ¥é¡é ­æ˜¯å¦å·²èª¿æ•´çš„è…³æœ¬
 
     void Start()
     {
-        // ³]©w«ü¼ĞªºµJÂI¬°¹Ï¤ù¤¤¤ß
-        cursorHotspot = new Vector2(zoomCursorTexture.width / 2, zoomCursorTexture.height / 2);
-
-        // «O¦s¨t²Îªº¹w³]·Æ¹««ü¼Ğ
-        defaultCursorTexture = null; // ¨t²ÎÀq»{«ü¼Ğ
-        defaultHotspot = Vector2.zero;
-
+        cursorHotspot = new Vector2(ZoomCursor.width / 2, ZoomCursor.height / 2);
+        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto); // é è¨­ç‚ºé»˜èªé¼ æ¨™æ¨£å¼
         cameraController = Camera.main.GetComponent<MouseLook>();
     }
 
     void Update()
     {
-        // «Ø¥ß Ray ¨ÓÀË´ú·Æ¹««ü¦Vªºª«¥ó
+        // ä½¿ç”¨å°„ç·šæª¢æ¸¬é¼ æ¨™ä¸‹çš„ç‰©ä»¶
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit))
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit))
         {
-            // ¦pªGÀ»¤¤ªºª«¥ó¦³¯S©wªº Tag¡]¨Ò¦p "ZoomTarget"¡^
-            if (hit.collider.CompareTag("ZoomTarget")&& !cameraController.HasAdjustedCamera)
+            // 1ï¸âƒ£ æª¢æ¸¬æ˜¯å¦ç‚º ZoomTarget ç‰©ä»¶
+            ZoomTarget zoomTarget = hit.collider.GetComponent<ZoomTarget>();
+            if (zoomTarget != null && !cameraController.HasAdjustedCamera)
             {
-                Cursor.SetCursor(zoomCursorTexture, cursorHotspot, CursorMode.Auto); // ³]¸m¦Û­q·Æ¹««ü¼Ğ
-                return;
+                    Cursor.SetCursor(ZoomCursor, cursorHotspot, CursorMode.Auto);
+                    return; // æå‰è¿”å›ï¼Œé˜²æ­¢å¾Œé¢çš„åˆ¤æ–·å¹²æ“¾
             }
-            if (hit.collider.CompareTag("Pickup") && cameraController.HasAdjustedCamera)
+
+            // 2ï¸âƒ£ æª¢æ¸¬æ˜¯å¦ç‚º PickTarget ç‰©ä»¶
+            PickTarget pickTarget = hit.collider.GetComponent<PickTarget>();
+            if (pickTarget != null)
             {
-                Cursor.SetCursor(PickCursorTexture, cursorHotspot, CursorMode.Auto); // ³]¸m¦Û­q·Æ¹««ü¼Ğ
-                return;
+                // åˆ¤æ–· PickTarget æ˜¯å¦éœ€è¦æ‹‰è¿‘
+                if (pickTarget.requiresZoom)
+                {
+                    if (cameraController != null && cameraController.HasAdjustedCamera)
+                    {
+                        Cursor.SetCursor(PickCursor, cursorHotspot, CursorMode.Auto);
+                    }
+                    else
+                    {
+                        // å¦‚æœéœ€è¦æ‹‰è¿‘ä½†æœªæ‹‰è¿‘ï¼Œæ¢å¾©é»˜èªæ¨£å¼
+                        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+                    }
+                }
+                else
+                {
+                    // é€™å€‹ PickTarget ä¸éœ€è¦æ‹‰è¿‘ï¼Œç›´æ¥æ”¹è®Šé¼ æ¨™æ¨£å¼
+                    Cursor.SetCursor(PickCursor, cursorHotspot, CursorMode.Auto);
+                }
+                return; // æå‰è¿”å›ï¼Œé˜²æ­¢å¾Œé¢çš„åˆ¤æ–·å¹²æ“¾
             }
         }
 
-        // ¦pªG¨S¦³À»¤¤¥Ø¼Ğ¡A«ì´_¬°¹w³]«ü¼Ğ
-        Cursor.SetCursor(defaultCursorTexture, defaultHotspot, CursorMode.Auto);
+        // 3ï¸âƒ£ å¦‚æœæ²’æœ‰é»æ“Šåˆ°ä»»ä½•ç‰©ä»¶ï¼Œå°‡é¼ æ¨™è¨­å›é»˜èªæ¨£å¼
+        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
     }
 }
+
+

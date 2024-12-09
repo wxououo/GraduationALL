@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75fc6ff20ff49ff44bf9933018154cef, type: 3}
   m_Name: CandyJar
   m_EditorClassIdentifier: 
-  id: 5
+  id: 8
   itemName: candy
-  icon: {fileID: 21300000, guid: fd4fff778bdbe4defa5d0b668028c59f, type: 3}
-  prefab: {fileID: 6054843596081836395, guid: 2884683e4f947462299a9ad443e516ae, type: 3}
+  icon: {fileID: 21300000, guid: 22ec278b49ce43743954205edc317635, type: 3}
+  prefab: {fileID: 7936200887751524800, guid: 5d7a39fee431e7547a540711741b42f5, type: 3}
   isPuzzlePiece: 0

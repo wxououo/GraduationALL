@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75fc6ff20ff49ff44bf9933018154cef, type: 3}
   m_Name: HairPin
   m_EditorClassIdentifier: 
-  id: 6
+  id: 7
   itemName: hair
-  icon: {fileID: 21300000, guid: 9a9eb365cf45e4a70b290f5a39706736, type: 3}
-  prefab: {fileID: 4840409968700521387, guid: 758c2d843fad0461f89f21e0ba2211cf, type: 3}
+  icon: {fileID: 21300000, guid: 3a9ad81ea072e24499f6592b2011aa34, type: 3}
+  prefab: {fileID: 6599482071037595012, guid: b6730ec582dd9fc40ab7228592bcbc8a, type: 3}
   isPuzzlePiece: 0
