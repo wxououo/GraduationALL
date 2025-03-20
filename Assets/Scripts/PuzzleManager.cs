@@ -174,10 +174,6 @@ public class PuzzleManager : MonoBehaviour
     {
         foreach (Transform slot in puzzleSlots)
         {
-            // if (slot.childCount == 0) // 檢查是否有空槽
-            // {
-            //     return;  // 如果有空槽，拼圖尚未完成
-            // }
             PuzzleSlot slotComponent = slot.GetComponent<PuzzleSlot>();
             if (!slotComponent.IsOccupied()) // 檢查是否有空槽
             {
@@ -199,18 +195,5 @@ public class PuzzleManager : MonoBehaviour
         // 拼圖完成後觸發的邏輯，可以是動畫、開門等
         Debug.Log("Trigger puzzle completion event.");
     }
-
-    // public Transform GetSlotForPiece(PuzzlePiece piece)
-    // {
-    //     foreach (Transform slot in puzzleSlots)
-    //     {
-    //         string slotKey = $"PuzzleSlot_{slot.GetInstanceID()}_Occupied";
-    //         if (PlayerPrefs.GetInt(slotKey, 0) == 1)
-    //         {
-    //             return slot;
-    //         }
-    //     }
-    //     return null;
-    // }
 
 }

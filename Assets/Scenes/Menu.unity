@@ -528,7 +528,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   transitionAnim: {fileID: 2146722908}
-  sceneName: Old
+  sceneName: Modern
 --- !u!4 &861051487
 Transform:
   m_ObjectHideFlags: 0

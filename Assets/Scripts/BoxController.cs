@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 public class BoxController : MonoBehaviour
 {
     public int[] currentDigits = new int[4]; // 保存每個按鈕的當前數字
-    public int[] correctCode = { 4, 7, 5, 4 }; // 預設的正確密碼
+    public int[] correctCode = { 4, 0, 4, 6 }; // 預設的正確密碼
     public string originalSceneName; // 原始場景的名稱
     private const string BoxLidStateKey = "BoxLidOpen";
 

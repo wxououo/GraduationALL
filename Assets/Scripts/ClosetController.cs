@@ -11,9 +11,12 @@ public class ClosetController : MonoBehaviour
     public float rotationSpeed = 100f; // Speed for rotation
     public bool isLeftDoor = false; // Set this to true for the left door, false for the right door
     private float precisionThreshold = 1f; // Precision tolerance for stopping rotation
+    public bool requiresZoom = false; // 是否需要鏡頭放大才能切換場景
+    private MouseLook cameraController; // 用來檢查鏡頭是否已調整
 
     void Start()
     {
+        cameraController = Camera.main.GetComponent<MouseLook>();
         // Record the pivot's initial rotation
         closedRotation = pivot.localRotation; // Using Quaternion for smoother rotation
 
@@ -26,20 +29,27 @@ public class ClosetController : MonoBehaviour
         {
             openedRotation = Quaternion.Euler(closedRotation.eulerAngles.x, closedRotation.eulerAngles.y + 90f, closedRotation.eulerAngles.z); // Right door opens outward
         }
-
     }
-
-    void OnMouseDown()
+    void Update()
     {
-        Debug.Log("Door clicked, toggling door.");
-        StopAllCoroutines(); // Stop any ongoing movement
-        if (isOpened)
+        if (!cameraController.HasAdjustedCamera)
         {
             StartCoroutine(CloseDoor());
         }
-        else
-        {
-            StartCoroutine(OpenDoor());
+    }
+    void OnMouseDown()
+    {
+        StopAllCoroutines(); // Stop any ongoing movement
+        if (cameraController.HasAdjustedCamera)
+            {
+            if (isOpened)
+            {
+                StartCoroutine(CloseDoor());
+            }
+            else
+            {
+                StartCoroutine(OpenDoor());
+            }
         }
     }
 

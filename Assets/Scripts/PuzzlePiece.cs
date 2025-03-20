@@ -3,66 +3,50 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Linq;
+public enum PieceType
+{
+    Puzzle,
+    PhotoAlbum
+}
+
 public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
-    private Vector3 startPosition; // Original position to return to if not placed correctly
+    public PieceType pieceType;  // 物件類型 (Puzzle or PhotoAlbum)
+    private Vector3 startPosition;
     private Transform originalParent;
-    private Camera playerCamera; // 攝影機，用於發射 Raycast
+    private Camera playerCamera;
     public Item itemData;
-    //public bool isPlacedCorrectly = false;
+    public GameObject targetObject;
 
-    // public void Initialize(Item item)
-    // {
-    //     if (item == null)
-    //     {
-    //         string pieceName = gameObject.name;
-    //         Debug.Log($"Attempting to find item for piece name: {pieceName}");
-    //         // First, try finding by name
-    //         item = InventoryManager.Instance.allItems.Find(i => i.itemName == pieceName);
-    //         if (item == null)
-    //         {
-    //             // Try extracting an ID from the name
-    //             int.TryParse(pieceName.Replace("Wedding_", ""), out int itemId);
-    //             item = InventoryManager.Instance.FindItemByID(itemId);
-    //         }
+    private int puzzleSlotLayer;
 
-    //         // If still not found, provide a default item
-    //         if (item == null)
-    //         {
-    //             Debug.LogError($"Cannot initialize PuzzlePiece: Absolute item data failure for {gameObject.name}");
-    //             item = new Item { itemName = "Default", id = -1 };
-    //         }
-    //     }
-    //     if (item == null)
-    //     {
-    //         Debug.LogError($"Cannot initialize PuzzlePiece: Absolute item data failure for {gameObject.name}");
-
-    //         return;
-    //     }
-    //     itemData = item;
-    //     gameObject.name = $"Wedding_{item.itemName}";
-    //     Debug.Log($"Successfully initialized PuzzlePiece with Item: {item.itemName}");
-    // }
-
-
+    public bool isPlacedCorrectly = false;
     private void Start()
     {
         startPosition = transform.position;
         originalParent = transform.parent;
-        playerCamera = Camera.main; // 找到主攝影機
+        playerCamera = Camera.main;
+        puzzleSlotLayer = LayerMask.NameToLayer("PuzzleSlot");
         if (itemData == null)
         {
             TryFindItemData();
         }
-        //InventoryManager.Instance.RegisterPuzzlePiece(this.gameObject, itemData);
+        LoadPieceState();
+    }
+    public void PlacePiece(Vector3 targetPosition)
+    {
+        transform.position = targetPosition;
+        GetComponent<Collider>().enabled = true;
+        SavePieceState();
 
     }
+
     public void SetItemData(Item item)
     {
         if (item != null)
         {
             itemData = item;
-            gameObject.name = item.itemName;  // 確保名稱與 Item 一致
+            gameObject.name = item.itemName;
             Debug.Log($"Item data set: {item.itemName}");
         }
         else
@@ -70,6 +54,7 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             Debug.LogError("Attempting to set null item data");
         }
     }
+
     private void TryFindItemData()
     {
         if (InventoryManager.Instance == null)
@@ -78,16 +63,11 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             return;
         }
 
-        // 打印一些診斷信息
-        Debug.Log($"Attempting to find item data for GameObject: {gameObject.name}");
-        Debug.Log($"Total items in inventory: {InventoryManager.Instance.allItems.Count}");
-
-        // 這裡要特別注意，因為你提到生成的物件名稱是 "InventoryItem 3d(Clone)"
         string originalItemName = gameObject.name.Replace("(Clone)", "");
 
         Item foundItem = InventoryManager.Instance.allItems.Find(item =>
-            item.itemName == originalItemName || // 精確匹配原始名稱
-            originalItemName.Contains(item.itemName) // 部分包含
+            item.itemName == originalItemName ||
+            originalItemName.Contains(item.itemName)
         );
 
         if (foundItem != null)
@@ -95,24 +75,16 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             itemData = foundItem;
             Debug.Log($"Successfully found item data: {itemData.itemName}");
         }
+        else
+        {
+            // 如果找不到，打印所有可用的物品名稱，幫助診斷
+            string availableItemNames = string.Join(", ",
+                InventoryManager.Instance.allItems.Select(item => item.itemName));
+        }
     }
 
-    // private void PlacePieceAtSavedPosition()
-    // {
-    //     foreach (Transform slot in PuzzleManager.Instance.puzzleSlots)
-    //     {
-    //         if (PlayerPrefs.GetInt($"PuzzleSlot_{slot.GetInstanceID()}", 0) == itemData.id)
-    //         {
-    //             PlacePiece(slot.position);
-    //             transform.SetParent(slot);
-    //             isPlacedCorrectly = true;
-    //             break;
-    //         }
-    //     }
-    // }
     public void OnBeginDrag(PointerEventData eventData)
     {
-        //if (isPlacedCorrectly) return;
         if (itemData == null)
         {
             TryFindItemData();
@@ -122,21 +94,18 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         {
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
-        GetComponent<CanvasGroup>().blocksRaycasts = false; // Allows dragging through UI
-        transform.SetParent(null);  // 讓拼圖碎片不再隸屬 Canvas，使其能夠移動到 3D 場景中
+        canvasGroup.blocksRaycasts = false;
+        transform.SetParent(null);  // 讓物件不再依附於 Canvas，讓它可以移動到 3D 場景中
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        //if (isPlacedCorrectly) return;
-        // 將鼠標的屏幕坐標轉換為場景中的 3D 坐標
         Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
-        // 如果 Raycast 碰到 3D 物體，則讓拼圖碎片跟隨
         if (Physics.Raycast(ray, out hit))
         {
-            transform.position = hit.point;  // 讓拼圖碎片跟隨 Raycast 碰撞點移動
+            transform.position = hit.point; // 物件跟隨射線的碰撞點移動
         }
     }
 
@@ -147,95 +116,134 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         {
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
-        if (itemData == null)
-        {
-            TryFindItemData();
-        }
+        canvasGroup.blocksRaycasts = true; // 重新開啟交互
+
         if (playerCamera == null)
         {
             playerCamera = Camera.main;
         }
-        GetComponent<CanvasGroup>().blocksRaycasts = true; // Re-enable interaction
-        if (PuzzleManager.Instance == null)
-        {
-            Debug.LogError("PuzzleManager.Instance is null!");
-            ReturnToStartPosition();
-            return;
-        }
+
         if (itemData == null)
         {
-            Debug.LogError("itemData is null for this puzzle piece!");
             ReturnToStartPosition();
             return;
         }
 
-        Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit) && hit.collider.CompareTag("Puzzle"))
+        if (pieceType == PieceType.Puzzle)
         {
-            bool isPlacedCorrectly = PuzzleManager.Instance.PlacePuzzlePiece(this);
+            if (PuzzleManager.Instance == null)
+            {
+                Debug.LogError("PuzzleManager.Instance is null!");
+                ReturnToStartPosition();
+                return;
+            }
+
+            Collider[] hitColliders = Physics.OverlapSphere(transform.position, 2.0f);
+            bool placed = false;
+
+            foreach (Collider hitCollider in hitColliders)
+            {
+                if (hitCollider.CompareTag("Puzzle"))
+                {
+                    PuzzleSlot slot = hitCollider.GetComponent<PuzzleSlot>();
+                    if (slot != null && !slot.IsOccupied() && slot.IsWithinPlacementZone(transform.position))
+                    {
+                        bool isPlacedCorrectly = PuzzleManager.Instance.PlacePuzzlePiece(this);
+                        if (isPlacedCorrectly)
+                        {
+                            placed = true;
+                            if (InventoryManager.Instance != null)
+                            {
+                                InventoryManager.Instance.Remove(itemData);
+                                InventoryManager.Instance.ListItems();
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!placed)
+            {
+                ReturnToStartPosition();
+            }
+        }
+        else if (pieceType == PieceType.PhotoAlbum)
+        {
+            if (PhotoAlbumManager.Instance == null)
+            {
+                Debug.LogError("PhotoAlbumManager.Instance is null!");
+                ReturnToStartPosition();
+                return;
+            }
+
+            bool isPlacedCorrectly = PhotoAlbumManager.Instance.PlacePhotoPiece(this);
 
             if (isPlacedCorrectly)
             {
-                if (InventoryManager.Instance != null)
-                {
-                    InventoryManager.Instance.Remove(itemData);
-                    InventoryManager.Instance.ListItems();
-                }
-                else
-                {
-                    Debug.LogError("InventoryManager.Instance is null!");
-                }
+                HandleSuccessfulPlacement();
             }
             else
             {
                 ReturnToStartPosition();
             }
         }
-        else
-        {
-            ReturnToStartPosition();
-        }
     }
-
-    // Method to snap the piece into the correct slot
-    public void PlacePiece(Vector3 targetPosition)
-    {
-        transform.position = targetPosition;
-        CanvasGroup canvasGroup = GetComponent<CanvasGroup>();
-        if (canvasGroup == null)
-        {
-            canvasGroup = gameObject.AddComponent<CanvasGroup>();
-        }
-        //     if (originalParent != null)
-        // {
-        //     transform.SetParent(originalParent);
-        // }
-        // else
-        // {
-        //     Debug.LogWarning($"OriginalParent is null for {name}. Ensure it is set correctly.");
-        // }
-        //isPlacedCorrectly = true;
-        GetComponent<CanvasGroup>().blocksRaycasts = true; // Prevent further dragging
-        //PlayerPrefs.SetInt($"PuzzlePiece_{itemData.id}_Placed", 1);
-        //PlayerPrefs.SetInt($"PuzzleSlot_{transform.parent.GetInstanceID()}", itemData.id);
-        //PlayerPrefs.Save();
-    }
-
     public void ResetPiece()
     {
         transform.position = startPosition; // 恢復到初始位置
         transform.SetParent(originalParent); // 恢復原始父物件
-        //isPlacedCorrectly = false; // 清除正確放置標記
-        //GetComponent<CanvasGroup>().blocksRaycasts = true; // 允許再次拖動
-        //PlayerPrefs.SetInt($"PuzzlePiece_{itemData.id}_Placed", 0);
+        isPlacedCorrectly = false; // 清除正確放置標記
+        SavePieceState();
+    }
+    private void SavePieceState()
+    {
+        PlayerPrefs.SetInt($"PuzzlePiece_{itemData.id}_Placed", isPlacedCorrectly ? 1 : 0);
         PlayerPrefs.Save();
     }
-    // Method to return the piece to its original position if not placed correctly
+
+    private void LoadPieceState()
+    {
+        if (PlayerPrefs.GetInt($"PuzzlePiece_{itemData.id}_Placed", 0) == 1)
+        {
+            gameObject.SetActive(false);
+        }
+        else
+        {
+            ResetPiece();
+        }
+    }
+
+    private void HandleSuccessfulPlacement()
+    {
+        if (InventoryManager.Instance != null)
+        {
+            InventoryManager.Instance.Remove(itemData);
+            InventoryManager.Instance.ListItems();
+        }
+        else
+        {
+            Debug.LogError("InventoryManager.Instance is null!");
+        }
+
+        if (targetObject != null)
+        {
+            targetObject.SetActive(true);  // 顯示目標物件
+        }
+    }
+
     public void ReturnToStartPosition()
     {
-
         transform.position = startPosition; // Return to original scene position
-
+        transform.SetParent(originalParent);
+        // 如果返回到UI中，重置RectTransform属性
+        if (originalParent != null && originalParent.GetComponent<RectTransform>() != null)
+        {
+            RectTransform rectTransform = GetComponent<RectTransform>();
+            if (rectTransform != null)
+            {
+                rectTransform.anchoredPosition = Vector2.zero;
+                rectTransform.localScale = Vector3.one;
+            }
+        }
     }
 }

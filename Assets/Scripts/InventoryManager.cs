@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Video;
 using UnityEngine.UI;
@@ -11,7 +12,7 @@ public class InventoryManager : MonoBehaviour
 {
     public static InventoryManager Instance;
     private Dictionary<GameObject, Item> objectItemMap = new Dictionary<GameObject, Item>();
-    //private Dictionary<int, PuzzlePiece> puzzlePieces = new Dictionary<int, PuzzlePiece>();
+    private List<GameObject> inventoryUIItems = new List<GameObject>(); // 改為追蹤UI物件
 
     public List<Item> Items = new List<Item>();
 
@@ -27,12 +28,11 @@ public class InventoryManager : MonoBehaviour
     public TextMeshProUGUI itemName;
     public Button takeOutButton;
     public List<Item> allItems;
+    public TextMeshProUGUI itemDescription;
 
     private void Awake()
     {
-
         Instance = this;
-
     }
 
     private void OnEnable()
@@ -50,17 +50,22 @@ public class InventoryManager : MonoBehaviour
     public void Remove(Item item)
     {
         Items.Remove(item);
-
+        StartCoroutine(UpdateInventoryUI());
+        itemDescription.text = "";
         SaveInventory();
     }
-
+    private IEnumerator UpdateInventoryUI()
+    {
+        yield return null;
+        ListItems();
+    }
     public void ListItems()
     {
         foreach (Transform item in ItemContent)
         {
             Destroy(item.gameObject);
         }
-
+        objectItemMap.Clear();
         foreach (var item in Items)
         {
             GameObject obj = Instantiate(InventoryItem, ItemContent);
@@ -81,14 +86,17 @@ public class InventoryManager : MonoBehaviour
 
             itemName.text = item.itemName;
             itemIcon.sprite = item.icon;
+            itemDescription.text = "";
+
 
             // 當點擊取出按鈕時，生成該物品
             takeOutButton.onClick.RemoveAllListeners();
+            takeOutButton.onClick.RemoveAllListeners();
             takeOutButton.onClick.AddListener(() => TakeOutItem(item));
-
+            objectItemMap[obj] = item;
             AddDragFunctionality(obj, item);
-
         }
+        LayoutRebuilder.ForceRebuildLayoutImmediate(ItemContent.GetComponent<RectTransform>());
     }
     private void AddDragFunctionality(GameObject obj, Item item)
     {
@@ -128,6 +136,10 @@ public class InventoryManager : MonoBehaviour
             // Update the object's position to the hit point in world space
             obj.transform.position = hit.point;
         }
+        else
+        {
+            obj.transform.position = playerCamera.transform.position + ray.direction * 2f;
+        }
     }
     private void OnEndDrag(GameObject obj, Item item)
     {
@@ -138,73 +150,44 @@ public class InventoryManager : MonoBehaviour
         }
         canvasGroup.blocksRaycasts = true; // 允許拖曳穿過其他 UI 元素
 
-        // 檢測是否與其他物件發生互動
-        Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit))
+        Collider[] hitColliders = Physics.OverlapSphere(obj.transform.position, 2.0f);
+        bool validPlacement = false;
+
+        foreach (Collider hitCollider in hitColliders)
         {
-            Debug.Log($"Hit object: {hit.collider.gameObject.name}");
-            if (hit.collider.CompareTag("Puzzle")) // Replace with your correct slot tag
+            Debug.Log($"Hit object: {hitCollider.gameObject.name}");
+            if (hitCollider.CompareTag("Puzzle")) // Replace with your correct slot tag
             {
-                Debug.Log("Puzzle slot detected.");
-                // Snap the object into place and finalize placement
-                obj.transform.position = hit.collider.transform.position;
+                obj.transform.position = hitCollider.transform.position;
 
                 PuzzlePiece puzzlePiece = obj.GetComponent<PuzzlePiece>();
 
-                if (puzzlePiece != null)
+                if (puzzlePiece != null && PuzzleManager.Instance.PlacePuzzlePiece(puzzlePiece))
                 {
-                    // Attempt to place the piece; if correctly placed, remove from inventory
-                    if (PuzzleManager.Instance.PlacePuzzlePiece(puzzlePiece))
-                    {
-                        Debug.Log("Puzzle piece correct");
-                        Remove(item); // Remove from inventory if placed correctly
-                        ListItems();   // Refresh the inventory display
-                        return;
-                    }
-                    else
-                    {
-                        Debug.Log($"Puzzle piece not placed correctly, returning to inventory.");
-                        ReturnToInventory(obj, item); // Return to inventory if placement was invalid
-                    }
+                    Remove(item); // Remove from inventory if placed correctly
+                    ListItems();   // Refresh the inventory display
+                    validPlacement = true;
+                    break;
                 }
-
             }
-            else if (hit.collider.CompareTag("Interactable"))
+            else if (hitCollider.CompareTag("Interactable"))
             {
-                Debug.Log("Interactable detected.");
-                InteractableManager.Instance.HandleInteraction(item, hit.collider.gameObject);
+                InteractableManager.Instance.HandleInteraction(item, hitCollider.gameObject);
 
-                // 將物品從道具欄移除
                 Remove(item);
                 ListItems();  // 更新道具欄顯示
-            }
-            else
-            {
-                Debug.Log("No valid slot detected, returning to inventory.");
-                // Return the object back to the inventory
-                ReturnToInventory(obj, item);
+                validPlacement = true;
+                break;
             }
         }
-        else
-        {
-            Debug.Log("Raycast did not hit anything, returning to inventory.");
-            ReturnToInventory(obj, item); // Return to inventory if no valid slot was detected
-        }
-        Remove(item);  // Remove from the inventory
-        ListItems();   // Refresh the UI
-    }
-    // void TakeOutItem(Item item)
-    // {
 
-    //     SetSpawnPointAtCameraCenter(); // 設置 spawnPoint 在攝影機前方
-    //     if (item.prefab != null)
-    //     {
-    //         Instantiate(item.prefab, spawnPoint.position, spawnPoint.rotation); // 生成 prefab
-    //         Remove(item);  // 從道具欄移除該物品
-    //         ListItems();  // 更新道具欄介面
-    //     }
-    // }
+        if (!validPlacement)
+        {
+            Debug.Log("No valid slot detected, returning to inventory.");
+            ReturnToInventory(obj, item);
+            ListItems();
+        }
+    }
 
     public void TakeOutItem(Item item)
     {
@@ -222,10 +205,20 @@ public class InventoryManager : MonoBehaviour
                 puzzlePiece = spawnedItem.AddComponent<PuzzlePiece>();
             }
 
-            // 從道具欄中移除
             Remove(item);
             ListItems();
+            StartCoroutine(DelayedDescriptionUpdate(item));
+            itemName.text = item.itemName;
+            itemDescription.text = item.description; // 顯示物品敘述
+            itemDescription.ForceMeshUpdate();
         }
+    }
+    private IEnumerator DelayedDescriptionUpdate(Item item)
+    {
+        yield return null; // 等待一幀，確保 UI 先更新
+        itemName.text = item.itemName;
+        itemDescription.text = item.description; // 顯示物品敘述
+        itemDescription.ForceMeshUpdate();
     }
     void SetSpawnPointAtCameraCenter()
     {
@@ -236,11 +229,8 @@ public class InventoryManager : MonoBehaviour
             spawnPoint.rotation = Quaternion.LookRotation(playerCamera.transform.forward); // 朝向與攝影機一致
         }
     }
-
-
     public void RegisterPuzzlePiece(GameObject obj, Item item)
     {
-        // Add the GameObject and its associated Item to the dictionary
         if (!objectItemMap.ContainsKey(obj))
         {
             objectItemMap.Add(obj, item);
@@ -249,26 +239,30 @@ public class InventoryManager : MonoBehaviour
 
     public void ReturnToInventory(GameObject obj, Item item)
     {
-        obj.transform.SetParent(ItemContent);  // Make it a child of the inventory content panel
-        obj.transform.localPosition = Vector3.zero;  // Reset its local position
+        if (!Items.Contains(item))
+        {
+            Add(item);
 
-        // Optionally reset the scale and rotation if needed
+        }
+
+        obj.transform.SetParent(ItemContent);
+        obj.transform.localPosition = Vector3.zero;
         obj.transform.localScale = Vector3.one;
         obj.transform.localRotation = Quaternion.identity;
-
-        // Re-add the item to the inventory system
-        Add(item); // Add back to inventory list
+        Debug.Log("Clearing item description");
+      
         ListItems();
     }
 
     public void SaveInventory()
     {
+        PlayerPrefs.SetInt("ItemCount", Items.Count); // 保存道具數量
+
         for (int i = 0; i < Items.Count; i++)
         {
             PlayerPrefs.SetInt("Item_" + i, Items[i].id);
             // 根據需求儲存更多道具屬性，例如 icon, quantity 等等
         }
-        PlayerPrefs.SetInt("ItemCount", Items.Count); // 保存道具數量
         PlayerPrefs.Save();
     }
     public void LoadInventory()
@@ -279,11 +273,11 @@ public class InventoryManager : MonoBehaviour
         for (int i = 0; i < itemCount; i++)
         {
             int itemID = PlayerPrefs.GetInt("Item_" + i);
-            // 假設這裡有一個方法可以根據名稱找到對應的 Item，可能是一個道具資料庫
-            Item newItem = FindItemByID(itemID); // 需要你自行實現這個方法
+            Item newItem = FindItemByID(itemID);
             if (newItem != null)
             {
                 Items.Add(newItem);
+
             }
             else
             {
@@ -292,17 +286,26 @@ public class InventoryManager : MonoBehaviour
         }
 
         ListItems(); // 更新道具介面顯示
+        ClearDuplicateSceneObjects(); // 移到這裡，在所有道具載入後執行
     }
+    private void ClearDuplicateSceneObjects()
+    {
+        foreach (Item inventoryItem in Items)
+        {
+            Debug.Log($"Looking for objects with base name: {inventoryItem.prefab.name}");
 
-    // public PuzzlePiece GetPuzzlePieceById(int id)
-    // {
-    //     if (puzzlePieces.TryGetValue(id, out PuzzlePiece puzzlePiece))
-    //     {
-    //         return puzzlePiece;
-    //     }
-    //     Debug.LogWarning($"PuzzlePiece with ID {id} not found.");
-    //     return null;
-    // }
+            GameObject[] untaggedObjects = GameObject.FindObjectsOfType<GameObject>();
+
+
+            foreach (var obj in untaggedObjects)
+            {
+                if (obj != null && obj.name.Contains(inventoryItem.prefab.name) && !obj.transform.IsChildOf(ItemContent))
+                {
+                    Destroy(obj);
+                }
+            }
+        }
+    }
     public Item FindItemByID(int id)
     {
         return allItems.Find(item => item.id == id);

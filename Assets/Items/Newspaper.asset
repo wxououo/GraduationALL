@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Newspaper
   m_EditorClassIdentifier: 
   id: 5
-  itemName: Newspaper
+  itemName: "\u5831\u7D19"
   icon: {fileID: 21300000, guid: 4128e991b81bf6e4fb5e751ba8dee988, type: 3}
   prefab: {fileID: 3283315571604586050, guid: 022022531c636de41aae00b30ca622c4, type: 3}
   isPuzzlePiece: 0
+  description: news

@@ -9,12 +9,8 @@ public class ItemPickup : MonoBehaviour
     private bool canBePickedUp = false; // 控制是否可以拾取
     public bool requiresZoom = false; // 是否需要鏡頭放大才能切換場景
     private MouseLook cameraController; // 用來檢查鏡頭是否已調整
-    // private void Start()
-    // {
-    //     bool isUnlocked = PlayerPrefs.GetInt("IsUnlocked", 0) == 1;
-    //     gameObject.SetActive(!isUnlocked);
-    //     Debug.Log($"Item {gameObject.name} initialized. Visible: {!isUnlocked}");
-    // }
+    public GameObject itemToDisplayOnPickup; // Camera
+
     void Start()
     {
         // 獲取主相機上的 MouseLook 腳本
@@ -34,6 +30,11 @@ public class ItemPickup : MonoBehaviour
     }
     void Pickup()
     {
+        if (itemToDisplayOnPickup != null)
+        {
+            itemToDisplayOnPickup.SetActive(true);
+            gameObject.SetActive(false);
+        }
         // 檢查道具是否已經在道具欄中
         if (InventoryManager.Instance.Items.Contains(Item))
         {
@@ -42,11 +43,15 @@ public class ItemPickup : MonoBehaviour
         }
 
         // 將物品加入道具欄並摧毀遊戲物件
-        InventoryManager.Instance.Add(Item);
-        PlayerPrefs.SetInt(pickupKey, 1);
-        PlayerPrefs.Save();
-        //Destroy(gameObject);
-        gameObject.SetActive(false);
+        if (Item != null && itemToDisplayOnPickup == null)
+        {
+            // 將物品加入道具欄並摧毀遊戲物件
+            InventoryManager.Instance.Add(Item);
+            PlayerPrefs.SetInt(pickupKey, 1);
+            PlayerPrefs.Save();
+            //Destroy(gameObject);
+            gameObject.SetActive(false);
+        }
     }
 
     private void OnMouseDown()

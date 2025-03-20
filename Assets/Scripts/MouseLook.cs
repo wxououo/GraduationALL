@@ -36,6 +36,13 @@ public class MouseLook : MonoBehaviour
         isInventoryOpen = state;
     }
 
+    public bool isDraggingButton { get; private set; } = false;
+    public void SetDraggingState(bool state)
+    {
+        isDraggingButton = state;
+        Debug.Log("Dragging State Changed: " + isDraggingButton);
+    }
+
     void Start()
     {
         Cursor.visible = true;
@@ -50,9 +57,13 @@ public class MouseLook : MonoBehaviour
             Debug.LogError("Main Camera not found.");
             return;
         }
-
+        if (isDraggingButton)
+        {
+            Debug.Log("Dragging detected, stopping camera movement.");
+            return;
+        }
         // 如果道具欄開啟，禁止視角移動與點擊檢測
-        if (isInventoryOpen)
+        if (isInventoryOpen || isDraggingButton)
         {
             return;
         }

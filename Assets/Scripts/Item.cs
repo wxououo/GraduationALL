@@ -10,4 +10,5 @@ public class Item : ScriptableObject
     public Sprite icon;
     public GameObject prefab;  // 物品對應的預製物
     public bool isPuzzlePiece; // 是否為拼圖類型物品
+    public string description;
 }

@@ -10,6 +10,7 @@ public class ResetController : MonoBehaviour
     public void ResetGame()
     {
         PlayerPrefs.SetInt("IsUnlocked", 0);
+        PlayerPrefs.SetInt("IsTVPlayed", 0);
         PlayerPrefs.SetInt(BoxLidStateKey, 0);
         ResetInventory();
 
@@ -18,10 +19,6 @@ public class ResetController : MonoBehaviour
             itemPickup.ResetItem(); // 回到初始狀態
         }
 
-        // foreach (var puzzlePiece in FindObjectsOfType<PuzzlePiece>())
-        // {
-        //     puzzlePiece.ResetPiece();
-        // }
 
         ResetPuzzlePieces();
         ResetPuzzleSlots();

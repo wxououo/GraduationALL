@@ -36,12 +36,13 @@ public class InteractableManager : MonoBehaviour
         if (animator != null)
         {
             animator.SetTrigger("FlickerOn");  // 觸發 flicker 動畫
-    
+
 
         }
-        
+
         if (!isVideoPlaying && videoPlayer != null && tvScreenRenderer != null)
-        {tvAnimator.SetBool("IsTVOn", true);
+        {
+            tvAnimator.SetBool("IsTVOn", true);
             // 確保動畫完成後再播放影片
             StartCoroutine(WaitForAnimationThenPlayVideo());
         }
@@ -61,6 +62,9 @@ public class InteractableManager : MonoBehaviour
 
         videoPlayer.Play();
         isVideoPlaying = true;
+        PlayerPrefs.SetInt("IsTVPlayed", 1);
+        PlayerPrefs.Save();
+
     }
     public void HandleInteraction(Item item, GameObject interactableObject)
     {
@@ -68,7 +72,7 @@ public class InteractableManager : MonoBehaviour
         if (tv != null)
         {
             float distance = Vector3.Distance(interactableObject.transform.position, this.transform.position);
-        
+
             if (distance <= snapThreshold)
             {
                 tv.PlayVideo(interactableObject); // Trigger TV interaction if within range

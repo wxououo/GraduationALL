@@ -17,3 +17,4 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 3c15b520b5924436dae9e899eb86fba7, type: 3}
   prefab: {fileID: 3562874287511562816, guid: 5eac47454ece04adb8a231349f8abf8a, type: 3}
   isPuzzlePiece: 1
+  description: w3
