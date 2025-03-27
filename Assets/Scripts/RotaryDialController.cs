@@ -48,44 +48,53 @@ public class RotaryDialController : MonoBehaviour
 
     private IEnumerator RotateDialToNumberAndBack(int number)
     {
-        float targetAngle = numberAngles[number];
         float startAngle = dial.localEulerAngles.z;
+
+        // 確保撥號旋轉只能往逆時針方向
+        float targetAngle = startAngle + Mathf.Abs(Mathf.DeltaAngle(startAngle, numberAngles[number]));
 
         // 播放旋轉音效
         if (rotateSound != null && audioSource != null)
         {
             audioSource.clip = rotateSound;
-            audioSource.loop = true; // 設置音效為循環播放
+            audioSource.loop = true;
             audioSource.Play();
         }
-        // 旋轉到目標角度
+
+        // 逆時針旋轉到目標角度
         while (Mathf.Abs(Mathf.DeltaAngle(dial.localEulerAngles.z, targetAngle)) > 0.1f)
         {
             float angle = Mathf.MoveTowardsAngle(dial.localEulerAngles.z, targetAngle, rotationSpeed * Time.deltaTime);
             dial.localEulerAngles = new Vector3(0, 0, angle);
             yield return null;
         }
+
         // 停止音效
         if (audioSource != null && audioSource.isPlaying)
         {
             audioSource.Stop();
         }
-        // 等待一段時間
+
         yield return new WaitForSeconds(waitTime);
+
         // 播放旋轉回初始位置的音效
         if (rotateSound != null && audioSource != null)
         {
             audioSource.clip = rotateSound;
-            audioSource.loop = true; // 設置音效為循環播放
+            audioSource.loop = true;
             audioSource.Play();
         }
-        // 旋轉回初始角度
-        while (Mathf.Abs(Mathf.DeltaAngle(dial.localEulerAngles.z, startAngle)) > 0.1f)
+
+        // 確保回到初始位置時只能順時針旋轉
+        float returnAngle = startAngle - Mathf.Abs(Mathf.DeltaAngle(dial.localEulerAngles.z, startAngle));
+
+        while (Mathf.Abs(Mathf.DeltaAngle(dial.localEulerAngles.z, returnAngle)) > 0.1f)
         {
-            float angle = Mathf.MoveTowardsAngle(dial.localEulerAngles.z, startAngle, rotationSpeed * Time.deltaTime);
+            float angle = Mathf.MoveTowardsAngle(dial.localEulerAngles.z, returnAngle, rotationSpeed * Time.deltaTime);
             dial.localEulerAngles = new Vector3(0, 0, angle);
             yield return null;
         }
+
         // 停止音效
         if (audioSource != null && audioSource.isPlaying)
         {
@@ -93,8 +102,9 @@ public class RotaryDialController : MonoBehaviour
         }
 
         EnableButtons();
-
     }
+
+
 
     private void CheckCode()
     {
