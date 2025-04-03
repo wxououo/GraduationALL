@@ -1480,7 +1480,7 @@ GameObject:
   - component: {fileID: 619747884}
   - component: {fileID: 619747887}
   - component: {fileID: 619747886}
-  m_Layer: 6
+  m_Layer: 0
   m_Name: PuzzleSlot_4
   m_TagString: Puzzle
   m_Icon: {fileID: 0}
@@ -1544,8 +1544,8 @@ MonoBehaviour:
   colorMaterial: {fileID: 2100000, guid: 26840c5f8964a44b684c5c7e86a90823, type: 2}
   previewMaterial: {fileID: 0}
   isOccupied: 0
-  placementThreshold: 5
-  detectionRadius: 5
+  placementThreshold: 2
+  detectionRadius: 2
 --- !u!114 &619747886
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2087,7 +2087,7 @@ GameObject:
   - component: {fileID: 806314273}
   - component: {fileID: 806314276}
   - component: {fileID: 806314275}
-  m_Layer: 6
+  m_Layer: 0
   m_Name: PuzzleSlot_1
   m_TagString: Puzzle
   m_Icon: {fileID: 0}
@@ -2151,8 +2151,8 @@ MonoBehaviour:
   colorMaterial: {fileID: 2100000, guid: 26840c5f8964a44b684c5c7e86a90823, type: 2}
   previewMaterial: {fileID: 0}
   isOccupied: 0
-  placementThreshold: 5
-  detectionRadius: 5
+  placementThreshold: 2
+  detectionRadius: 2
 --- !u!114 &806314275
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3564,7 +3564,7 @@ GameObject:
   - component: {fileID: 1348189237}
   - component: {fileID: 1348189240}
   - component: {fileID: 1348189239}
-  m_Layer: 6
+  m_Layer: 0
   m_Name: PuzzleSlot_3
   m_TagString: Puzzle
   m_Icon: {fileID: 0}
@@ -3628,8 +3628,8 @@ MonoBehaviour:
   colorMaterial: {fileID: 2100000, guid: 26840c5f8964a44b684c5c7e86a90823, type: 2}
   previewMaterial: {fileID: 0}
   isOccupied: 0
-  placementThreshold: 5
-  detectionRadius: 5
+  placementThreshold: 2
+  detectionRadius: 2
 --- !u!114 &1348189239
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5529,7 +5529,7 @@ GameObject:
   - component: {fileID: 1792409097}
   - component: {fileID: 1792409100}
   - component: {fileID: 1792409099}
-  m_Layer: 6
+  m_Layer: 0
   m_Name: PuzzleSlot_2
   m_TagString: Puzzle
   m_Icon: {fileID: 0}
@@ -5593,8 +5593,8 @@ MonoBehaviour:
   colorMaterial: {fileID: 2100000, guid: 26840c5f8964a44b684c5c7e86a90823, type: 2}
   previewMaterial: {fileID: 0}
   isOccupied: 0
-  placementThreshold: 5
-  detectionRadius: 5
+  placementThreshold: 2
+  detectionRadius: 2
 --- !u!114 &1792409099
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6260,7 +6260,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: b12cae3cf0b5822438e5406b3bbcbb2c,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 316
+      value: 311
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b12cae3cf0b5822438e5406b3bbcbb2c,
         type: 3}
