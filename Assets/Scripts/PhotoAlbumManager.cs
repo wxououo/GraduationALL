@@ -13,26 +13,27 @@ public class PhotoAlbumManager : MonoBehaviour
         Instance = this;
     }
 
-    public bool PlacePhotoPiece(PhotoPiece photoPiece)
+    public bool PlacePhotoPiece(PuzzlePiece photoPiece)
     {
-        if (photoPiece == null)
+        if (photoPiece == null || photoPiece.itemData == null)
         {
-            Debug.LogError("傳入的 PhotoPiece 為 null！");
+            Debug.LogError("Invalid PhotoPiece!");
             return false;
         }
 
-        Collider[] hitColliders = Physics.OverlapSphere(photoPiece.transform.position, 2.0f);
-        foreach (Collider hitCollider in hitColliders)
+        foreach (Transform slot in photoSlots)
         {
-            PhotoSlot slot = hitCollider.GetComponent<PhotoSlot>();
-            if (slot != null && !slot.AlbumIsOccupied() && slot.IsCorrectPhoto(photoPiece)) // 確保方法可用
+            float distance = Vector3.Distance(photoPiece.transform.position, slot.position);
+
+            if (distance < snapThreshold)
             {
-                photoPiece.transform.position = slot.transform.position;
-                photoPiece.transform.SetParent(slot.transform);
-                slot.SetOccupied(true);
+                photoPiece.transform.position = slot.position;
+                photoPiece.transform.SetParent(slot);
+                Debug.Log($"Photo placed in album: {photoPiece.name}");
                 return true;
             }
         }
+
         return false;
     }
 }

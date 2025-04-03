@@ -13,15 +13,8 @@ public class PuzzleManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    LoadPuzzleState();
+        Instance = this;
+        LoadPuzzleState();
     }
 
     private void LoadPuzzleState()
@@ -82,25 +75,23 @@ public class PuzzleManager : MonoBehaviour
     {
         if (puzzlePiece == null)
         {
-            Debug.LogError("傳入的 PuzzlePiece 為 null！");
+            Debug.LogError("PlacePuzzlePiece received null PuzzlePiece!");
             return false;
         }
 
-        Collider[] hitColliders = Physics.OverlapSphere(puzzlePiece.transform.position, 500.0f);
-        foreach (Collider hitCollider in hitColliders)
+        Debug.Log($"Attempting to place puzzle piece: {puzzlePiece.name}");
+        // 檢查拼圖是否可以被放置在槽位中
+        if (CheckPuzzlePiecePlacement(puzzlePiece))
         {
-            PuzzleSlot slot = hitCollider.GetComponent<PuzzleSlot>();
-            if (slot != null && !slot.IsOccupied() && slot.IsWithinPlacementZone(puzzlePiece.transform.position))
-            {
-                puzzlePiece.transform.position = slot.transform.position;
-                puzzlePiece.transform.SetParent(slot.transform);
-                slot.SetToOccupied(true);
-                return true;
-            }
+            SaveSlotState();
+            return true;
         }
-        return false;
+        else
+        {
+            puzzlePiece.ReturnToStartPosition();  // 如果沒放好，返回原位置
+            return false;
+        }
     }
-
     private void SaveSlotState()
     {
         // 遍歷所有插槽並保存其佔據狀態
