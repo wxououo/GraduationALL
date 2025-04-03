@@ -16,9 +16,10 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
     private Transform originalParent;
     private Camera playerCamera;
     public Item itemData;
-    public GameObject targetObject;
+    //public GameObject targetObject;
 
     private int puzzleSlotLayer;
+
 
     public bool isPlacedCorrectly = false;
     private void Start()
@@ -27,12 +28,16 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         originalParent = transform.parent;
         playerCamera = Camera.main;
         puzzleSlotLayer = LayerMask.NameToLayer("PuzzleSlot");
+
         if (itemData == null)
         {
-            TryFindItemData();
+            Debug.LogWarning($"Start: itemData was null for {gameObject.name}, trying to find...");
+            TryFindItemData();  // 重新嘗試查找 ItemData
         }
-        LoadPieceState();
+            LoadPieceState();
+
     }
+
     public void PlacePiece(Vector3 targetPosition)
     {
         transform.position = targetPosition;
@@ -47,7 +52,7 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         {
             itemData = item;
             gameObject.name = item.itemName;
-            Debug.Log($"Item data set: {item.itemName}");
+            //Debug.Log($"Item data set: {item.itemName}");
         }
         else
         {
@@ -116,78 +121,58 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         {
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
-        canvasGroup.blocksRaycasts = true; // 重新開啟交互
-
+        canvasGroup.blocksRaycasts = true;
+        if (itemData == null)
+        {
+            TryFindItemData();
+        }
         if (playerCamera == null)
         {
             playerCamera = Camera.main;
         }
-
-        if (itemData == null)
+        if (PuzzleManager.Instance == null)
         {
             ReturnToStartPosition();
             return;
         }
-
-        if (pieceType == PieceType.Puzzle)
+        if (itemData == null)
         {
-            if (PuzzleManager.Instance == null)
-            {
-                Debug.LogError("PuzzleManager.Instance is null!");
-                ReturnToStartPosition();
-                return;
-            }
+            Debug.LogError("itemData is null for this puzzle piece!");
+            ReturnToStartPosition();
+            return;
+        }
 
-            Collider[] hitColliders = Physics.OverlapSphere(transform.position, 2.0f);
-            bool placed = false;
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, 2.0f);
+        bool placed = false;
 
-            foreach (Collider hitCollider in hitColliders)
+        foreach (Collider hitCollider in hitColliders)
+        {
+            if (hitCollider.CompareTag("Puzzle"))
             {
-                if (hitCollider.CompareTag("Puzzle"))
+                PuzzleSlot slot = hitCollider.GetComponent<PuzzleSlot>();
+                if (slot != null && !slot.IsOccupied() && slot.IsWithinPlacementZone(transform.position))
                 {
-                    PuzzleSlot slot = hitCollider.GetComponent<PuzzleSlot>();
-                    if (slot != null && !slot.IsOccupied() && slot.IsWithinPlacementZone(transform.position))
+                    bool isPlacedCorrectly = PuzzleManager.Instance.PlacePuzzlePiece(this);
+                    if (isPlacedCorrectly)
                     {
-                        bool isPlacedCorrectly = PuzzleManager.Instance.PlacePuzzlePiece(this);
-                        if (isPlacedCorrectly)
+                        placed = true;
+                        if (InventoryManager.Instance != null)
                         {
-                            placed = true;
-                            if (InventoryManager.Instance != null)
-                            {
-                                InventoryManager.Instance.Remove(itemData);
-                                InventoryManager.Instance.ListItems();
-                            }
-                            break;
+                            InventoryManager.Instance.Remove(itemData);
+                            InventoryManager.Instance.ListItems();
                         }
+                        break;
                     }
                 }
             }
-            if (!placed)
-            {
-                ReturnToStartPosition();
-            }
         }
-        else if (pieceType == PieceType.PhotoAlbum)
+        if (!placed)
         {
-            if (PhotoAlbumManager.Instance == null)
-            {
-                Debug.LogError("PhotoAlbumManager.Instance is null!");
-                ReturnToStartPosition();
-                return;
-            }
-
-            bool isPlacedCorrectly = PhotoAlbumManager.Instance.PlacePhotoPiece(this);
-
-            if (isPlacedCorrectly)
-            {
-                HandleSuccessfulPlacement();
-            }
-            else
-            {
-                ReturnToStartPosition();
-            }
+            ReturnToStartPosition();
         }
     }
+
+
     public void ResetPiece()
     {
         transform.position = startPosition; // 恢復到初始位置
@@ -213,23 +198,23 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         }
     }
 
-    private void HandleSuccessfulPlacement()
-    {
-        if (InventoryManager.Instance != null)
-        {
-            InventoryManager.Instance.Remove(itemData);
-            InventoryManager.Instance.ListItems();
-        }
-        else
-        {
-            Debug.LogError("InventoryManager.Instance is null!");
-        }
+    //private void HandleSuccessfulPlacement()
+    //{
+    //    if (InventoryManager.Instance != null)
+    //    {
+    //        InventoryManager.Instance.Remove(itemData);
+    //        InventoryManager.Instance.ListItems();
+    //    }
+    //    else
+    //    {
+    //        Debug.LogError("InventoryManager.Instance is null!");
+    //    }
 
-        if (targetObject != null)
-        {
-            targetObject.SetActive(true);  // 顯示目標物件
-        }
-    }
+    //    if (targetObject != null)
+    //    {
+    //        targetObject.SetActive(true);  // 顯示目標物件
+    //    }
+    //}
 
     public void ReturnToStartPosition()
     {

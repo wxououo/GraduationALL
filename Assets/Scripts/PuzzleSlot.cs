@@ -5,7 +5,6 @@ using UnityEngine.UI;
 
 public class PuzzleSlot : MonoBehaviour
 {
-    //public static PuzzleSlot Instance;
     public static PuzzleSlot Instance { get; private set; }
 
     public int slotID;  // Optional: 指定這個槽位的ID，用於檢查匹配
@@ -19,23 +18,7 @@ public class PuzzleSlot : MonoBehaviour
 
     public float placementThreshold = 2.0f;
     public float detectionRadius = 2.0f;  // 增加偵測範圍
-    // private void Awake()
-    // {
-    //     if (Instance == null)
-    //     {
-    //         Instance = this;
-    //         EnsureInitialized();
-    //         // imageComponent = GetComponent<Image>();
-    //         // if (imageComponent == null)
-    //         // {
-    //         //     Debug.LogError("No Image component found on " + gameObject.name);
-    //         // }
 
-    //     }
-    //     // else{
-    //     //     gameObject.SetActive(false);
-    //     // }
-    // }
     private void Awake()
     {
         meshRenderer = GetComponent<MeshRenderer>();
@@ -96,27 +79,10 @@ public class PuzzleSlot : MonoBehaviour
     }
     void Start()
     {
-        //imageComponent = GetComponent<Image>();
-        //EnsureInitialized();
         UpdateAppearance();
     }
 
-    // public void UpdateAppearance()
-    // {
-    //     if (imageComponent == null) return;
 
-    //     // Check if slot is actually occupied
-    //     isOccupied = IsOccupied();
-
-    //     if (isOccupied)
-    //     {
-    //         SetToColor();
-    //     }
-    //     else
-    //     {
-    //         SetToGrayscale();
-    //     }
-    // }
     public void SetToColor()
     {
         if (imageComponent == null || colorMaterial == null) return;
@@ -148,33 +114,30 @@ public class PuzzleSlot : MonoBehaviour
     public void SetToOccupied(bool status)
     {
         isOccupied = status;
-        // if (status)
-        // {
-        //     SetToColor(); // Set the slot to the colored appearance
-        // }
-        // else
-        // {
-        //     SetToGrayscale(); // Set the slot to the grayscale appearance
-        // }
         UpdateAppearance();
     }
     public bool IsOccupied()
     {
+        Debug.Log($"Checking IsOccupied: {isOccupied}");
         return transform.childCount > 0 || isOccupied; // 檢查是否有拼圖碎片在槽位上
     }
 
-    public bool IsWithinPlacementZone(Vector3 position)
+    public bool IsWithinPlacementZone(Vector3 piecePosition)
     {
-        float distance = Vector3.Distance(transform.position, position);
-        return distance <= placementThreshold;
+        float distance = Vector3.Distance(transform.position, piecePosition);
+        bool isInside = distance < 5.0f;  // 這裡的 1.0f 是放置範圍，必要時可以調大
+
+        Debug.Log($"PuzzleSlot {gameObject.name}: Checking IsWithinPlacementZone - Distance = {distance}, IsInside = {isInside}");
+        return isInside;
     }
+
+
 
     private void OnTriggerEnter(Collider other)
     {
         PuzzlePiece piece = other.GetComponent<PuzzlePiece>();
         if (piece != null)
         {
-            // Highlight the slot or provide visual feedback
             SetToColor();
         }
     }
