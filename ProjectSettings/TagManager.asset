@@ -9,6 +9,7 @@ TagManager:
   - Interactable
   - ZoomTarget
   - Pickup
+  - PhotoSlot
   layers:
   - Default
   - TransparentFX

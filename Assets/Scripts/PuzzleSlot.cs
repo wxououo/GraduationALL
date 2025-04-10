@@ -19,23 +19,7 @@ public class PuzzleSlot : MonoBehaviour
 
     public float placementThreshold = 2.0f;
     public float detectionRadius = 2.0f;  // 增加偵測範圍
-    // private void Awake()
-    // {
-    //     if (Instance == null)
-    //     {
-    //         Instance = this;
-    //         EnsureInitialized();
-    //         // imageComponent = GetComponent<Image>();
-    //         // if (imageComponent == null)
-    //         // {
-    //         //     Debug.LogError("No Image component found on " + gameObject.name);
-    //         // }
 
-    //     }
-    //     // else{
-    //     //     gameObject.SetActive(false);
-    //     // }
-    // }
     private void Awake()
     {
         meshRenderer = GetComponent<MeshRenderer>();
@@ -101,22 +85,6 @@ public class PuzzleSlot : MonoBehaviour
         UpdateAppearance();
     }
 
-    // public void UpdateAppearance()
-    // {
-    //     if (imageComponent == null) return;
-
-    //     // Check if slot is actually occupied
-    //     isOccupied = IsOccupied();
-
-    //     if (isOccupied)
-    //     {
-    //         SetToColor();
-    //     }
-    //     else
-    //     {
-    //         SetToGrayscale();
-    //     }
-    // }
     public void SetToColor()
     {
         if (imageComponent == null || colorMaterial == null) return;
@@ -148,14 +116,7 @@ public class PuzzleSlot : MonoBehaviour
     public void SetToOccupied(bool status)
     {
         isOccupied = status;
-        // if (status)
-        // {
-        //     SetToColor(); // Set the slot to the colored appearance
-        // }
-        // else
-        // {
-        //     SetToGrayscale(); // Set the slot to the grayscale appearance
-        // }
+
         UpdateAppearance();
     }
     public bool IsOccupied()
@@ -195,3 +156,4 @@ public class PuzzleSlot : MonoBehaviour
         }
     }
 }
+

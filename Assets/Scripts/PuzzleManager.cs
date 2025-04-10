@@ -143,7 +143,7 @@ public class PuzzleManager : MonoBehaviour
                 if (slotComponent.slotID == puzzlePiece.itemData.id)
                 {
                     puzzlePiece.PlacePiece(slot.position);
-                    Debug.Log("Puzzle piece fits into slot");
+                    //Debug.Log("Puzzle piece fits into slot");
 
                     puzzlePiece.transform.SetParent(slot);
                     slotComponent.SetToOccupied(true);

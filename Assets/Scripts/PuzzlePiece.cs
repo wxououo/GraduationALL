@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Linq;
+using UnityEngine.UI;
+
 public enum PieceType
 {
     Puzzle,
@@ -17,6 +19,7 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
     private Camera playerCamera;
     public Item itemData;
     public GameObject targetObject;
+
 
     private int puzzleSlotLayer;
 
@@ -47,7 +50,7 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         {
             itemData = item;
             gameObject.name = item.itemName;
-            Debug.Log($"Item data set: {item.itemName}");
+            //Debug.Log($"Item data set: {item.itemName}");
         }
         else
         {
@@ -175,19 +178,59 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
                 ReturnToStartPosition();
                 return;
             }
-
-            bool isPlacedCorrectly = PhotoAlbumManager.Instance.PlacePhotoPiece(this);
-
-            if (isPlacedCorrectly)
+            Debug.Log($"Mouse Position: {Input.mousePosition}");
+            // 使用 GraphicRaycaster 對 UI 元素做射線
+            PointerEventData pointerData = new PointerEventData(EventSystem.current)
             {
-                HandleSuccessfulPlacement();
-            }
-            else
+                position = Input.mousePosition
+            };
+
+            List<RaycastResult> results = new List<RaycastResult>();
+            GraphicRaycaster raycaster = FindObjectOfType<GraphicRaycaster>();
+
+            if (raycaster != null)
             {
-                ReturnToStartPosition();
+                raycaster.Raycast(pointerData, results);
+                Debug.Log($"GraphicRaycast results count: {results.Count}");
             }
-        }
+
+            foreach (RaycastResult result in results)
+            {
+                Debug.Log($"GraphicRaycast hit: {result.gameObject.name}");
+                PhotoSlot slot = result.gameObject.GetComponentInParent<PhotoSlot>();
+
+                if (slot != null)
+                {
+                    Debug.Log("找到 PhotoSlot！");
+
+                    bool isOccupied = slot.IsOccupied();
+                    bool isWithinZone = slot.IsWithinPlacementZone(transform.position);
+                    bool isValidPiece = slot.IsValidForPiece(this);
+
+                    Debug.Log($" Slot 檢查：Occupied={isOccupied}, WithinZone={isWithinZone}, ValidPiece={isValidPiece}");
+
+                    if (!isOccupied && isWithinZone && isValidPiece)
+                    {
+                        bool placed = PhotoAlbumManager.Instance.PlacePhotoPiece(this, slot);
+                        if (placed)
+                        {
+                            Debug.Log("照片放置成功！");
+                            if (InventoryManager.Instance != null)
+                            {
+                                InventoryManager.Instance.Remove(itemData);
+                                InventoryManager.Instance.ListItems();
+                            }
+                            return;
+                        }
+                    }
+                }
+            }
+
+            Debug.Log("沒有合適的照片槽位，物件退回原位");
+            ReturnToStartPosition();
     }
+
+}
     public void ResetPiece()
     {
         transform.position = startPosition; // 恢復到初始位置

@@ -179,8 +179,14 @@ public class InventoryManager : MonoBehaviour
                 validPlacement = true;
                 break;
             }
+            //else if (hitCollider.CompareTag("PhotoSlot"))
+            //{
+            //    Remove(item);
+            //    ListItems();
+            //    validPlacement = true;
+            //    break;
+            //}
         }
-
         if (!validPlacement)
         {
             Debug.Log("No valid slot detected, returning to inventory.");
@@ -249,7 +255,6 @@ public class InventoryManager : MonoBehaviour
         obj.transform.localPosition = Vector3.zero;
         obj.transform.localScale = Vector3.one;
         obj.transform.localRotation = Quaternion.identity;
-        Debug.Log("Clearing item description");
       
         ListItems();
     }
