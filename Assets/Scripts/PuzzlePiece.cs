@@ -191,8 +191,22 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             if (raycaster != null)
             {
                 raycaster.Raycast(pointerData, results);
-                Debug.Log($"GraphicRaycast results count: {results.Count}");
+                Debug.Log($"[DEBUG] GraphicRaycast 命中數量：{results.Count}");
+
+                foreach (RaycastResult result in results)
+                {
+                    string objName = result.gameObject.name;
+                    int objLayer = result.gameObject.layer;
+                    bool isRaycastTarget = result.gameObject.TryGetComponent<Graphic>(out var graphic) && graphic.raycastTarget;
+
+                    Debug.Log($"[DEBUG] 命中物件：{objName}, Layer: {objLayer}, RaycastTarget: {isRaycastTarget}");
+                }
             }
+            else
+            {
+                Debug.LogError("[DEBUG] 找不到 GraphicRaycaster！");
+            }
+
 
             foreach (RaycastResult result in results)
             {

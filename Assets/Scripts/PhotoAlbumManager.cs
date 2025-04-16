@@ -8,34 +8,31 @@ public class PhotoAlbumManager : MonoBehaviour
     public static PhotoAlbumManager Instance;
     public List<Transform> photoSlots;
     public float snapThreshold = 2f;
+
     public VideoPlayer videoPlayer; // 拖入 Scene 中的 VideoPlayer
+    public GameObject VideoDisplay; // RawImage 的父物件 (例如整個影片面板)
+
     public Dictionary<int, VideoClip> photoIdToVideoClip = new Dictionary<int, VideoClip>();
-
-    private void Start()
-    {
-        Debug.Log("測試播放影片...");
-
-        VideoClip testClip = Resources.Load<VideoClip>("Videos/marry");
-        if (testClip == null)
-        {
-            Debug.LogError("找不到 marry.mp4！");
-        }
-        else
-        {
-            Debug.Log("成功載入 marry.mp4，準備播放");
-            videoPlayer.clip = testClip;
-            videoPlayer.Play();
-        }
-    }
 
     private void Awake()
     {
         Instance = this;
+
+        // 載入影片素材
         photoIdToVideoClip[0] = Resources.Load<VideoClip>("Videos/marry");
         photoIdToVideoClip[1] = Resources.Load<VideoClip>("Videos/clipB");
         photoIdToVideoClip[2] = Resources.Load<VideoClip>("Videos/clipA");
         photoIdToVideoClip[3] = Resources.Load<VideoClip>("Videos/clipB");
+
+        // 確保一開始影片不顯示
+        if (VideoDisplay != null)
+            VideoDisplay.SetActive(false);
+
+        // 加入播放結束的 callback
+        if (videoPlayer != null)
+            videoPlayer.loopPointReached += OnVideoFinished;
     }
+
     public bool PlacePhotoPiece(PuzzlePiece piece, PhotoSlot slot)
     {
         Debug.Log($"正在放置照片到 slot：{slot.name}");
@@ -58,8 +55,10 @@ public class PhotoAlbumManager : MonoBehaviour
             if (videoPlayer != null && clip != null)
             {
                 Debug.Log($"videoPlayer={videoPlayer}, clip={clip}");
+
                 videoPlayer.clip = clip;
-                videoPlayer.Play();
+                StartCoroutine(PlayVideoWithDelay(clip, 1.5f)); // 延遲 1.5 秒播放
+                //videoPlayer.Play();
                 Debug.Log($"播放影片：{clip.name}");
             }
             else
@@ -71,6 +70,34 @@ public class PhotoAlbumManager : MonoBehaviour
         {
             Debug.LogWarning($"找不到對應 photoId 的影片：{photoId}");
         }
+
         return true;
     }
+
+    // 播放完畢時隱藏 VideoDisplay
+    private void OnVideoFinished(VideoPlayer vp)
+    {
+        if (VideoDisplay != null)
+        {
+            VideoDisplay.SetActive(false);
+            Debug.Log("影片播放完畢，自動隱藏");
+        }
     }
+
+    private IEnumerator PlayVideoWithDelay(VideoClip clip, float delaySeconds)
+    {
+        Debug.Log($"延遲 {delaySeconds} 秒後播放影片：{clip.name}");
+
+        yield return new WaitForSeconds(delaySeconds);
+        if (VideoDisplay != null)
+            VideoDisplay.SetActive(true);
+        videoPlayer.clip = clip;
+        VideoDisplay.gameObject.SetActive(true);
+        videoPlayer.Play();
+
+        Debug.Log("開始播放影片！");
+    }
+
+}
+
+
