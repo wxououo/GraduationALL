@@ -1279,7 +1279,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.003921569}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -4502,6 +4502,7 @@ MonoBehaviour:
   snapThreshold: 2
   videoPlayer: {fileID: 5756224493956958321}
   VideoDisplay: {fileID: 2369203155561869401}
+  VideoAlbum: {fileID: 1767066645}
 --- !u!4 &1590098361
 Transform:
   m_ObjectHideFlags: 0
@@ -5584,6 +5585,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1790158230}
   - component: {fileID: 1790158229}
+  - component: {fileID: 1790158231}
   m_Layer: 0
   m_Name: PuzzleManager
   m_TagString: Untagged
@@ -5624,6 +5626,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1790158231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1790158228}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49a9c64be74bde24a9f83adeb924f170, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  raycaster: {fileID: 0}
+  targetCanvas: {fileID: 0}
 --- !u!1 &1792409095
 GameObject:
   m_ObjectHideFlags: 0
@@ -6045,6 +6061,11 @@ PrefabInstance:
       propertyPath: m_Camera
       value: 
       objectReference: {fileID: 1506387917}
+    - target: {fileID: 324498539977044252, guid: be8fe4d91b7940c4c9b8c8af0a3d6a12,
+        type: 3}
+      propertyPath: m_SortingOrder
+      value: 300
+      objectReference: {fileID: 0}
     - target: {fileID: 1204509890062993643, guid: be8fe4d91b7940c4c9b8c8af0a3d6a12,
         type: 3}
       propertyPath: m_Pivot.x
@@ -6189,7 +6210,7 @@ PrefabInstance:
     - target: {fileID: 5502307874098288034, guid: be8fe4d91b7940c4c9b8c8af0a3d6a12,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7161973127396828083, guid: be8fe4d91b7940c4c9b8c8af0a3d6a12,
         type: 3}

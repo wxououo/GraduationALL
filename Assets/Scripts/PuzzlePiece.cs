@@ -88,6 +88,7 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+
         if (itemData == null)
         {
             TryFindItemData();
@@ -178,73 +179,47 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
                 ReturnToStartPosition();
                 return;
             }
-            Debug.Log($"Mouse Position: {Input.mousePosition}");
-            // 使用 GraphicRaycaster 對 UI 元素做射線
-            PointerEventData pointerData = new PointerEventData(EventSystem.current)
+            Debug.Log("找到A！");
+            Collider[] hitColliders = Physics.OverlapSphere(transform.position, 20000.0f);
+            bool placed = false;
+
+            foreach (Collider hitCollider in hitColliders)
             {
-                position = Input.mousePosition
-            };
-
-            List<RaycastResult> results = new List<RaycastResult>();
-            GraphicRaycaster raycaster = FindObjectOfType<GraphicRaycaster>();
-
-            if (raycaster != null)
-            {
-                raycaster.Raycast(pointerData, results);
-                Debug.Log($"[DEBUG] GraphicRaycast 命中數量：{results.Count}");
-
-                foreach (RaycastResult result in results)
-                {
-                    string objName = result.gameObject.name;
-                    int objLayer = result.gameObject.layer;
-                    bool isRaycastTarget = result.gameObject.TryGetComponent<Graphic>(out var graphic) && graphic.raycastTarget;
-
-                    Debug.Log($"[DEBUG] 命中物件：{objName}, Layer: {objLayer}, RaycastTarget: {isRaycastTarget}");
-                }
-            }
-            else
-            {
-                Debug.LogError("[DEBUG] 找不到 GraphicRaycaster！");
-            }
-
-
-            foreach (RaycastResult result in results)
-            {
-                Debug.Log($"GraphicRaycast hit: {result.gameObject.name}");
-                PhotoSlot slot = result.gameObject.GetComponentInParent<PhotoSlot>();
-
-                if (slot != null)
+                Debug.Log("找到B！");
+                if (hitCollider.CompareTag("PhotoSlot"))
                 {
                     Debug.Log("找到 PhotoSlot！");
-
+                    PhotoSlot slot = hitCollider.GetComponent<PhotoSlot>();
                     bool isOccupied = slot.IsOccupied();
                     bool isWithinZone = slot.IsWithinPlacementZone(transform.position);
                     bool isValidPiece = slot.IsValidForPiece(this);
 
                     Debug.Log($" Slot 檢查：Occupied={isOccupied}, WithinZone={isWithinZone}, ValidPiece={isValidPiece}");
-
-                    if (!isOccupied && isWithinZone && isValidPiece)
+                    if (slot != null && !slot.IsOccupied() && slot.IsWithinPlacementZone(transform.position))
                     {
-                        bool placed = PhotoAlbumManager.Instance.PlacePhotoPiece(this, slot);
-                        if (placed)
+                        bool isPlacedCorrectly = PhotoAlbumManager.Instance.PlacePhotoPiece(this, slot);
+                        if (isPlacedCorrectly)
                         {
+                            placed = true;
                             Debug.Log("照片放置成功！");
                             if (InventoryManager.Instance != null)
                             {
                                 InventoryManager.Instance.Remove(itemData);
                                 InventoryManager.Instance.ListItems();
                             }
-                            return;
+                            break;
                         }
                     }
                 }
             }
+            if (!placed)
+            {
+                Debug.Log("沒有合適的照片槽位，物件退回原位");
+                ReturnToStartPosition();
+            }
+        }
 
-            Debug.Log("沒有合適的照片槽位，物件退回原位");
-            ReturnToStartPosition();
-    }
-
-}
+        }
     public void ResetPiece()
     {
         transform.position = startPosition; // 恢復到初始位置

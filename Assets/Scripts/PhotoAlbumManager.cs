@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Video;
+using UnityEngine.UI;
 
 public class PhotoAlbumManager : MonoBehaviour
 {
@@ -11,6 +12,9 @@ public class PhotoAlbumManager : MonoBehaviour
 
     public VideoPlayer videoPlayer; // 拖入 Scene 中的 VideoPlayer
     public GameObject VideoDisplay; // RawImage 的父物件 (例如整個影片面板)
+    public GameObject VideoAlbum;
+    public GameObject VideoInventory;
+    public Button InventoryButton;
 
     public Dictionary<int, VideoClip> photoIdToVideoClip = new Dictionary<int, VideoClip>();
 
@@ -58,7 +62,7 @@ public class PhotoAlbumManager : MonoBehaviour
 
                 videoPlayer.clip = clip;
                 StartCoroutine(PlayVideoWithDelay(clip, 1.5f)); // 延遲 1.5 秒播放
-                //videoPlayer.Play();
+                                                                //videoPlayer.Play();
                 Debug.Log($"播放影片：{clip.name}");
             }
             else
@@ -81,6 +85,7 @@ public class PhotoAlbumManager : MonoBehaviour
         {
             VideoDisplay.SetActive(false);
             Debug.Log("影片播放完畢，自動隱藏");
+            VideoAlbum.SetActive(true);
         }
     }
 
@@ -93,6 +98,12 @@ public class PhotoAlbumManager : MonoBehaviour
             VideoDisplay.SetActive(true);
         videoPlayer.clip = clip;
         VideoDisplay.gameObject.SetActive(true);
+        VideoAlbum.SetActive(false);
+        if (InventoryButton != null && InventoryButton.interactable)
+        {
+            InventoryButton.onClick.Invoke();
+            Debug.Log($"程式化觸發了按鈕 {InventoryButton.name} 的 OnClick 事件。");
+        }
         videoPlayer.Play();
 
         Debug.Log("開始播放影片！");
