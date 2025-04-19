@@ -59,12 +59,48 @@ public class PhotoCapture : MonoBehaviour
         ShowPhoto(screenCapture);
 
         // 如果检测到目标物体且该物体有 PhotoTarget 组件，并且该物体尚未拍摄过照片
-        if (itemDetected && hit.transform.GetComponent<PhotoTarget>() != null && !photographedObjects.Contains(hit.transform))
+        if (itemDetected)
         {
-            string photoName = hit.transform.GetComponent<PhotoTarget>().photoName; // 获取物体的名称
-            SavePhotoAsItem(screenCapture, hit.transform, photoName); // 使用物体的名称来命名照片
-            Debug.Log("Photo saved as item: " + photoName);
+            Debug.Log("Item Detected");
+
+            var target = hit.transform.GetComponent<PhotoTarget>();
+            if (target != null)
+            {
+                Debug.Log("Hit has PhotoTarget component");
+
+                if (!photographedObjects.Contains(hit.transform))
+                {
+                    Debug.Log("This object has not been photographed before");
+
+                    string photoName = target.photoName;
+                    string resourceName = target.overridePhotoResourceName;
+                    //Texture2D specifiedPhoto = Resources.Load<Texture2D>("Photos/marry");
+                    Texture2D specifiedPhoto = Resources.Load<Texture2D>(resourceName);
+                    if (specifiedPhoto != null)
+                    {
+                        SavePhotoAsItem(specifiedPhoto, hit.transform, photoName);
+                        Debug.Log("指定素材已儲存為照片：" + photoName);
+                    }
+                    else
+                    {
+                        Debug.LogError("找不到指定圖片素材！");
+                    }
+                }
+                else
+                {
+                    Debug.Log("這張照片已經拍過了！");
+                }
+            }
+            else
+            {
+                Debug.Log("Hit 的物件上沒有 PhotoTarget");
+            }
         }
+        else
+        {
+            Debug.Log("itemDetected 為 false，沒有偵測到目標");
+        }
+
     }
 
     void ShowPhoto(Texture2D photoTexture)

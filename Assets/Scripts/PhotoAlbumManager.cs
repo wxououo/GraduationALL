@@ -12,9 +12,10 @@ public class PhotoAlbumManager : MonoBehaviour
 
     public VideoPlayer videoPlayer; // 拖入 Scene 中的 VideoPlayer
     public GameObject VideoDisplay; // RawImage 的父物件 (例如整個影片面板)
-    public GameObject VideoAlbum;
-    public GameObject VideoInventory;
+    //hide
+    public GameObject UI;
     public Button InventoryButton;
+
 
     public Dictionary<int, VideoClip> photoIdToVideoClip = new Dictionary<int, VideoClip>();
 
@@ -85,7 +86,7 @@ public class PhotoAlbumManager : MonoBehaviour
         {
             VideoDisplay.SetActive(false);
             Debug.Log("影片播放完畢，自動隱藏");
-            VideoAlbum.SetActive(true);
+            UI.SetActive(true);
         }
     }
 
@@ -98,7 +99,7 @@ public class PhotoAlbumManager : MonoBehaviour
             VideoDisplay.SetActive(true);
         videoPlayer.clip = clip;
         VideoDisplay.gameObject.SetActive(true);
-        VideoAlbum.SetActive(false);
+        UI.SetActive(false);
         if (InventoryButton != null && InventoryButton.interactable)
         {
             InventoryButton.onClick.Invoke();

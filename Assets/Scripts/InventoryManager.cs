@@ -108,6 +108,18 @@ public class InventoryManager : MonoBehaviour
 
         PuzzlePiece puzzlePiece = obj.GetComponent<PuzzlePiece>() ?? obj.AddComponent<PuzzlePiece>();
         puzzlePiece.SetItemData(item);
+
+        // 新增這段：根據 item 判斷是拼圖或相片
+        if (item.isPuzzlePiece)
+        {
+            puzzlePiece.pieceType = PieceType.Puzzle;
+        }
+        else
+        {
+            puzzlePiece.pieceType = PieceType.PhotoAlbum;
+        }
+
+        //Debug.Log($"[AddDragFunctionality] {item.itemName} isPuzzlePiece: {item.isPuzzlePiece}, assigned pieceType: {puzzlePiece.pieceType}");
     }
 
     private void AddEvent(EventTrigger trigger, EventTriggerType type, System.Action<BaseEventData> action)
@@ -206,9 +218,16 @@ public class InventoryManager : MonoBehaviour
             spawnedItem.name = item.itemName;
 
             PuzzlePiece puzzlePiece = spawnedItem.GetComponent<PuzzlePiece>();
-            if (puzzlePiece == null)
+            Debug.Log($"Spawning {item.itemName}, isPuzzlePiece: {item.isPuzzlePiece}");
+
+            // ⭐ 設定 pieceType：你可以根據 item 的屬性判斷
+            if (item.isPuzzlePiece)  // 假設你在 Item 類別裡有 isPhoto 這樣的欄位
             {
-                puzzlePiece = spawnedItem.AddComponent<PuzzlePiece>();
+                puzzlePiece.pieceType = PieceType.Puzzle;
+            }
+            else
+            {
+                puzzlePiece.pieceType = PieceType.PhotoAlbum;
             }
 
             Remove(item);
