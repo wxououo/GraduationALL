@@ -5553,6 +5553,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: bf5358cedfff84dbe96c71bf29fd1944, type: 2}
   - {fileID: 11400000, guid: 99092285fafd44395b3cee36527345a4, type: 2}
   - {fileID: 11400000, guid: 830cb4f05ceda42aca32e24034258de0, type: 2}
+  - {fileID: 11400000, guid: 24fea55ce8cacbf4c8a1b2268c3fa2ab, type: 2}
+  - {fileID: 11400000, guid: 5acc1b05223e045409a169aaacbe9dec, type: 2}
+  - {fileID: 11400000, guid: 9c7f420b38563304c819f95f1691db41, type: 2}
   itemDescription: {fileID: 865992061}
 --- !u!4 &1771359519
 Transform:

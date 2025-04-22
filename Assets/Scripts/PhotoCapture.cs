@@ -63,6 +63,36 @@ public class PhotoCapture : MonoBehaviour
         {
             Debug.Log("Item Detected");
 
+            // 取得被 Raycast 擊中的物件 transform
+            Transform targetTransform = hit.transform;
+
+            // ✅ 搜索該物件周圍是否有 PuzzleSlot
+            float searchRadius = 20.0f; // 可調參數
+            Collider[] nearbyColliders = Physics.OverlapSphere(targetTransform.position, searchRadius);
+            List<PuzzleSlot> nearbyPuzzleSlots = new List<PuzzleSlot>();
+
+            foreach (var collider in nearbyColliders)
+            {
+                Debug.Log("Overlap 物件：" + collider.name);
+                PuzzleSlot slot = collider.GetComponentInChildren<PuzzleSlot>();
+
+                if (slot != null)
+                {
+                    nearbyPuzzleSlots.Add(slot);
+                    Debug.Log($"發現 PuzzleSlot：{slot.name}，是否被佔用：{slot.IsOccupied()}");
+                }
+            }
+
+            if (nearbyPuzzleSlots.Count > 0)
+            {
+                // 如果有 PuzzleSlot，但有任何一個未被佔用，就禁止拍照
+                bool allOccupied = nearbyPuzzleSlots.TrueForAll(slot => slot.IsOccupied());
+                if (!allOccupied)
+                {
+                    Debug.Log("有 PuzzleSlot 尚未放入拼圖，無法拍照！");
+                    yield break; // 直接跳出，不執行拍照保存
+                }
+            }
             var target = hit.transform.GetComponent<PhotoTarget>();
             if (target != null)
             {
@@ -136,4 +166,5 @@ public class PhotoCapture : MonoBehaviour
 
         Debug.Log("Photo saved as item: " + photoName);
     }
+
 }
