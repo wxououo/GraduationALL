@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 public class RotaryDialController : MonoBehaviour
 {
     public Transform dial; // 輪盤的Transform
-    public float[] numberAngles = {1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f }; // 每個數字的角度位置
+    public float[] numberAngles = { -30f, 300f, 270f, 240f, 210f, 180f, 150f, 120f, 60f, 30f }; // 每個數字的角度位置
     private string currentInput = ""; // 當前輸入的數字序列
     public string correctCode = "1109"; // 密碼
     public float rotationSpeed = 400f; // 旋轉速度
@@ -48,10 +48,11 @@ public class RotaryDialController : MonoBehaviour
 
     private IEnumerator RotateDialToNumberAndBack(int number)
     {
+        float targetAngle = numberAngles[number];
         float startAngle = dial.localEulerAngles.z;
+        // 確保始終逆時針旋轉
+        float adjustedTargetAngle = startAngle > targetAngle ? targetAngle : targetAngle - 360f;
 
-        // 確保撥號旋轉只能往逆時針方向
-        float targetAngle = startAngle + Mathf.Abs(Mathf.DeltaAngle(startAngle, numberAngles[number]));
 
         // 播放旋轉音效
         if (rotateSound != null && audioSource != null)
@@ -62,9 +63,9 @@ public class RotaryDialController : MonoBehaviour
         }
 
         // 逆時針旋轉到目標角度
-        while (Mathf.Abs(Mathf.DeltaAngle(dial.localEulerAngles.z, targetAngle)) > 0.1f)
+        while (Mathf.Abs(Mathf.DeltaAngle(dial.localEulerAngles.z, adjustedTargetAngle)) > 0.1f)
         {
-            float angle = Mathf.MoveTowardsAngle(dial.localEulerAngles.z, targetAngle, rotationSpeed * Time.deltaTime);
+            float angle = Mathf.MoveTowardsAngle(dial.localEulerAngles.z, adjustedTargetAngle, rotationSpeed * Time.deltaTime);
             dial.localEulerAngles = new Vector3(0, 0, angle);
             yield return null;
         }
@@ -86,11 +87,9 @@ public class RotaryDialController : MonoBehaviour
         }
 
         // 確保回到初始位置時只能順時針旋轉
-        float returnAngle = startAngle - Mathf.Abs(Mathf.DeltaAngle(dial.localEulerAngles.z, startAngle));
-
-        while (Mathf.Abs(Mathf.DeltaAngle(dial.localEulerAngles.z, returnAngle)) > 0.1f)
+        while (Mathf.Abs(Mathf.DeltaAngle(dial.localEulerAngles.z, startAngle - 360f)) > 0.1f)
         {
-            float angle = Mathf.MoveTowardsAngle(dial.localEulerAngles.z, returnAngle, rotationSpeed * Time.deltaTime);
+            float angle = Mathf.MoveTowardsAngle(dial.localEulerAngles.z, startAngle - 360f, rotationSpeed * Time.deltaTime);
             dial.localEulerAngles = new Vector3(0, 0, angle);
             yield return null;
         }

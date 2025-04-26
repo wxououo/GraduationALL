@@ -8,7 +8,8 @@ using UnityEngine.UI;
 public enum PieceType
 {
     Puzzle,
-    PhotoAlbum
+    PhotoAlbum,
+    Place
 }
 
 public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
@@ -19,6 +20,8 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
     private Camera playerCamera;
     public Item itemData;
     public GameObject targetObject;
+    public GameObject revealTarget;
+
 
 
     private int puzzleSlotLayer;
@@ -115,11 +118,7 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        CanvasGroup canvasGroup = GetComponent<CanvasGroup>();
-        if (canvasGroup == null)
-        {
-            canvasGroup = gameObject.AddComponent<CanvasGroup>();
-        }
+        CanvasGroup canvasGroup = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
         canvasGroup.blocksRaycasts = true; // 重新開啟交互
 
         if (playerCamera == null)
@@ -133,93 +132,97 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             return;
         }
 
-        if (pieceType == PieceType.Puzzle)
+        bool placed = false;
+
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, 2.0f);
+        Debug.Log($"OverlapSphere 找到 {hitColliders.Length} 個 Collider。");
+        foreach (Collider hitCollider in hitColliders)
         {
-            if (PuzzleManager.Instance == null)
+            Debug.Log($"檢測到的 Collider：{hitCollider.gameObject.name}, Tag: {hitCollider.tag}");
+        }
+        foreach (Collider hitCollider in hitColliders)
+        {
+            Debug.Log("Al");
+            // === Puzzle ===
+            if (pieceType == PieceType.Puzzle && hitCollider.CompareTag("Puzzle"))
             {
-                Debug.LogError("PuzzleManager.Instance is null!");
-                ReturnToStartPosition();
-                return;
-            }
-
-            Collider[] hitColliders = Physics.OverlapSphere(transform.position, 2.0f);
-            bool placed = false;
-
-            foreach (Collider hitCollider in hitColliders)
-            {
-                if (hitCollider.CompareTag("Puzzle"))
+                PuzzleSlot slot = hitCollider.GetComponent<PuzzleSlot>();
+                if (slot != null && !slot.IsOccupied() && slot.IsWithinPlacementZone(transform.position))
                 {
-                    PuzzleSlot slot = hitCollider.GetComponent<PuzzleSlot>();
-                    if (slot != null && !slot.IsOccupied() && slot.IsWithinPlacementZone(transform.position))
+                    bool isPlacedCorrectly = PuzzleManager.Instance.PlacePuzzlePiece(this);
+                    if (isPlacedCorrectly)
                     {
-                        bool isPlacedCorrectly = PuzzleManager.Instance.PlacePuzzlePiece(this);
-                        if (isPlacedCorrectly)
-                        {
-                            placed = true;
-                            if (InventoryManager.Instance != null)
-                            {
-                                InventoryManager.Instance.Remove(itemData);
-                                InventoryManager.Instance.ListItems();
-                            }
-                            break;
-                        }
+                        placed = true;
+                        InventoryManager.Instance?.Remove(itemData);
+                        InventoryManager.Instance?.ListItems();
+                        break;
                     }
                 }
             }
-            if (!placed)
-            {
-                ReturnToStartPosition();
-            }
-        }
-        else if (pieceType == PieceType.PhotoAlbum)
-        {
-            if (PhotoAlbumManager.Instance == null)
-            {
-                Debug.LogError("PhotoAlbumManager.Instance is null!");
-                ReturnToStartPosition();
-                return;
-            }
-            Debug.Log("找到A！");
-            Collider[] hitColliders = Physics.OverlapSphere(transform.position, 20000.0f);
-            bool placed = false;
 
-            foreach (Collider hitCollider in hitColliders)
+            // === Photo Album ===
+            else if (pieceType == PieceType.PhotoAlbum && hitCollider.CompareTag("PhotoSlot"))
             {
-                Debug.Log("找到B！");
-                if (hitCollider.CompareTag("PhotoSlot"))
+                Debug.Log("找到 PhotoSlot！");
+                PhotoSlot photoSlot = hitCollider.GetComponent<PhotoSlot>();
+                bool isOccupied = photoSlot.IsOccupied();
+                bool isWithinZone = photoSlot.IsWithinPlacementZone(transform.position);
+                bool isValidPiece = photoSlot.IsValidForPiece(this);
+
+                Debug.Log($"Slot 檢查：Occupied={isOccupied}, WithinZone={isWithinZone}, ValidPiece={isValidPiece}");
+                if (photoSlot != null && !photoSlot.IsOccupied() && photoSlot.IsWithinPlacementZone(transform.position))
                 {
-                    Debug.Log("找到 PhotoSlot！");
-                    PhotoSlot slot = hitCollider.GetComponent<PhotoSlot>();
-                    bool isOccupied = slot.IsOccupied();
-                    bool isWithinZone = slot.IsWithinPlacementZone(transform.position);
-                    bool isValidPiece = slot.IsValidForPiece(this);
-
-                    Debug.Log($" Slot 檢查：Occupied={isOccupied}, WithinZone={isWithinZone}, ValidPiece={isValidPiece}");
-                    if (slot != null && !slot.IsOccupied() && slot.IsWithinPlacementZone(transform.position))
+                    bool isPlacedCorrectly = PhotoAlbumManager.Instance.PlacePhotoPiece(this, photoSlot);
+                    if (isPlacedCorrectly)
                     {
-                        bool isPlacedCorrectly = PhotoAlbumManager.Instance.PlacePhotoPiece(this, slot);
-                        if (isPlacedCorrectly)
-                        {
-                            placed = true;
-                            Debug.Log("照片放置成功！");
-                            if (InventoryManager.Instance != null)
-                            {
-                                InventoryManager.Instance.Remove(itemData);
-                                InventoryManager.Instance.ListItems();
-                            }
-                            break;
-                        }
+                        placed = true;
+                        Debug.Log("照片放置成功！");
+                        InventoryManager.Instance?.Remove(itemData);
+                        InventoryManager.Instance?.ListItems();
+                        break;
                     }
                 }
             }
-            if (!placed)
+
+            // === Reveal Trigger (改用 Raycast) ===
+            else if (hitCollider.CompareTag("RevealTrigger"))
             {
-                Debug.Log("沒有合適的照片槽位，物件退回原位");
-                ReturnToStartPosition();
+                RevealZone revealZone = hitCollider.GetComponent<RevealZone>();
+                if (revealZone != null && revealZone.TryReveal(itemData.id))
+                {
+                    placed = true;
+                    Debug.Log("成功觸發 RevealZone");
+                    InventoryManager.Instance?.Remove(itemData);
+                    InventoryManager.Instance?.ListItems();
+                    break;
+                }
             }
         }
 
+        if (!placed)
+        {
+            Debug.Log("沒有合適的放置位置，物件退回原位");
+            ReturnToStartPosition();
         }
+    }
+
+
+    //Debug.Log($"觸發 RevealTrigger：{hitCollider.name}");
+    //RevealZone revealZone = hitCollider.GetComponent<RevealZone>();
+    //if (revealZone != null)
+    //{
+    //    Debug.Log("找到 RevealZone 組件，嘗試呼叫 TryReveal...");
+    //    bool revealed = revealZone.TryReveal(itemData.id);
+    //    Debug.Log("Reveal 嘗試結果：" + revealed);
+    //    if (revealed)
+    //    {
+    //        placed = true;
+    //        InventoryManager.Instance?.Remove(itemData);
+    //        break;
+    //    }
+    //}
+
+
     public void ResetPiece()
     {
         transform.position = startPosition; // 恢復到初始位置

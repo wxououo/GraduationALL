@@ -2303,17 +2303,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dial: {fileID: 2080039808}
   numberAngles:
-  - 60
-  - 90
+  - -60
+  - -30
   - 300
   - 270
   - 240
-  - 180
   - 210
-  - 240
-  - 270
-  - 300
-  - 30
+  - -180
+  - -150
+  - -120
+  - -90
+  - 0
   correctCode: 1109
   rotationSpeed: 250
   waitTime: 0.5
@@ -4832,7 +4832,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 2af9ea2309b42f548ba31473f3d3ace3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -4870,13 +4870,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2110363348}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -0.47998047, y: 2.3171275, z: 1.09}
-  m_LocalScale: {x: 2.5319, y: 1, z: 3.5829}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0.7071068, w: 0}
+  m_LocalPosition: {x: -0.47998047, y: 2.3171, z: 1.09}
+  m_LocalScale: {x: 13.564654, y: 5.3575, z: 19.195387}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 180}
 --- !u!1 &2116486682
 GameObject:
   m_ObjectHideFlags: 0

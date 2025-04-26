@@ -44,7 +44,8 @@ public class PuzzleManager : MonoBehaviour
                 {
                     // 將拼圖碎片放置到插槽
                     matchingPiece.PlacePiece(slot.position);
-                    matchingPiece.transform.SetParent(slot);
+                    //matchingPiece.transform.SetParent(slot);
+                    Destroy(matchingPiece.gameObject);
                     slotComponent.SetToOccupied(true);
                     ChangeSlotAppearance(slot); // 變成彩色
 
@@ -145,7 +146,8 @@ public class PuzzleManager : MonoBehaviour
                     puzzlePiece.PlacePiece(slot.position);
                     //Debug.Log("Puzzle piece fits into slot");
 
-                    puzzlePiece.transform.SetParent(slot);
+                    //puzzlePiece.transform.SetParent(slot);
+                    Destroy(puzzlePiece.gameObject);
                     slotComponent.SetToOccupied(true);
                     // 保存狀態
                     //SavePuzzleState(puzzlePiece, slot);

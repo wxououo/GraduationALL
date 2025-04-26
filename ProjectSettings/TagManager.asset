@@ -10,6 +10,7 @@ TagManager:
   - ZoomTarget
   - Pickup
   - PhotoSlot
+  - RevealTrigger
   layers:
   - Default
   - TransparentFX

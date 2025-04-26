@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 using UnityEngine;
 
 public class ResetController : MonoBehaviour
@@ -30,6 +31,9 @@ public class ResetController : MonoBehaviour
         }
         PlayerPrefs.Save();
         Debug.Log("遊戲已重置！");
+        // 重新載入目前場景
+        Scene currentScene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(currentScene.name);
     }
 
 

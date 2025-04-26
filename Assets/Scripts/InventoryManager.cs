@@ -153,6 +153,7 @@ public class InventoryManager : MonoBehaviour
             obj.transform.position = playerCamera.transform.position + ray.direction * 2f;
         }
     }
+
     private void OnEndDrag(GameObject obj, Item item)
     {
         CanvasGroup canvasGroup = obj.GetComponent<CanvasGroup>();
@@ -184,6 +185,7 @@ public class InventoryManager : MonoBehaviour
             }
             else if (hitCollider.CompareTag("Interactable"))
             {
+                Debug.Log("Play");
                 InteractableManager.Instance.HandleInteraction(item, hitCollider.gameObject);
 
                 Remove(item);
