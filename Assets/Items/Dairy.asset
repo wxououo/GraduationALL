@@ -18,3 +18,4 @@ MonoBehaviour:
   prefab: {fileID: 2986969311297785996, guid: 65e166b2978239044af7d661980619ab, type: 3}
   isPuzzlePiece: 0
   description: dairy
+  introductionImage: {fileID: 21300000, guid: f5c282f52a47de44db133cee592c979f, type: 3}

@@ -18,3 +18,4 @@ MonoBehaviour:
   prefab: {fileID: 5394395988901241436, guid: b6daa8b78364c044d984e83fdad28e3d, type: 3}
   isPuzzlePiece: 0
   description: book
+  introductionImage: {fileID: 21300000, guid: 1731028515fc6834daaf0c82b5eef6fc, type: 3}

@@ -11,6 +11,11 @@ public class PhotoCapture : MonoBehaviour
     [SerializeField] private GameObject cameraObject;
     [SerializeField] private InventoryManager inventoryManager;
 
+    public string itemName;
+    public Sprite itemIntroductionImage;
+    public GameObject rewardPrefab; // 可以是 null，null就用拍照的
+    public string overridePhotoResourceName; // 如果 rewardPrefab 是空的，用這個載入照片
+
 
     private bool viewPhoto;
     private HashSet<Transform> photographedObjects = new HashSet<Transform>(); // 存储已拍摄过的物体
@@ -46,8 +51,10 @@ public class PhotoCapture : MonoBehaviour
         yield return new WaitForEndOfFrame();
 
         // 检测相机前方是否有目标物体
+        int layerMask = LayerMask.GetMask("PhotoTargetLayer");
         RaycastHit hit;
-        bool itemDetected = Physics.Raycast(cameraObject.transform.position, cameraObject.transform.forward, out hit, 5000.0f);
+        bool itemDetected = Physics.Raycast(cameraObject.transform.position, cameraObject.transform.forward, out hit, 5000.0f, layerMask);
+        Debug.Log("Item Detected: " + hit.collider.gameObject.name);
 
         // 创建一个新的 Texture2D 来存储每次拍摄的照片
         Texture2D screenCapture = new Texture2D(photoWidth, photoHeight, TextureFormat.RGB24, false);
@@ -61,59 +68,69 @@ public class PhotoCapture : MonoBehaviour
         // 如果检测到目标物体且该物体有 PhotoTarget 组件，并且该物体尚未拍摄过照片
         if (itemDetected)
         {
-            Debug.Log("Item Detected");
-
-            // 取得被 Raycast 擊中的物件 transform
-            Transform targetTransform = hit.transform;
-
-            // ✅ 搜索該物件周圍是否有 PuzzleSlot
-            float searchRadius = 20.0f; // 可調參數
-            Collider[] nearbyColliders = Physics.OverlapSphere(targetTransform.position, searchRadius);
-            List<PuzzleSlot> nearbyPuzzleSlots = new List<PuzzleSlot>();
-
-            foreach (var collider in nearbyColliders)
-            {
-                Debug.Log("Overlap 物件：" + collider.name);
-                PuzzleSlot slot = collider.GetComponentInChildren<PuzzleSlot>();
-
-                if (slot != null)
-                {
-                    nearbyPuzzleSlots.Add(slot);
-                    Debug.Log($"發現 PuzzleSlot：{slot.name}，是否被佔用：{slot.IsOccupied()}");
-                }
-            }
-
-            if (nearbyPuzzleSlots.Count > 0)
-            {
-                // 如果有 PuzzleSlot，但有任何一個未被佔用，就禁止拍照
-                bool allOccupied = nearbyPuzzleSlots.TrueForAll(slot => slot.IsOccupied());
-                if (!allOccupied)
-                {
-                    Debug.Log("有 PuzzleSlot 尚未放入拼圖，無法拍照！");
-                    yield break; // 直接跳出，不執行拍照保存
-                }
-            }
+            Debug.Log("Item Detected: " + hit.collider.gameObject.name); // 確認擊中的物件名稱
             var target = hit.transform.GetComponent<PhotoTarget>();
-            if (target != null)
+            Debug.Log("PhotoTarget component: " + target); // 輸出 target 變數的值
+
+                if (target != null)
             {
+                Debug.Log("PhotoTarget component enabled: " + target.enabled);
                 Debug.Log("Hit has PhotoTarget component");
+
+                // 取得被 Raycast 擊中的物件 transform
+                Transform targetTransform = hit.transform;
+
+                // ✅ 搜索該物件周圍是否有 PuzzleSlot
+                float searchRadius = 50.0f; // 可調參數
+                Collider[] nearbyColliders = Physics.OverlapSphere(targetTransform.position, searchRadius);
+                List<PuzzleSlot> nearbyPuzzleSlots = new List<PuzzleSlot>();
+
+                foreach (var collider in nearbyColliders)
+                {
+                    Debug.Log("Overlap 物件：" + collider.name);
+                    PuzzleSlot slot = collider.GetComponentInChildren<PuzzleSlot>();
+
+                    if (slot != null)
+                    {
+                        nearbyPuzzleSlots.Add(slot);
+                        Debug.Log($"發現 PuzzleSlot：{slot.name}，是否被佔用：{slot.IsOccupied()}");
+                    }
+                }
+
+                if (nearbyPuzzleSlots.Count > 0)
+                {
+                    // 如果有 PuzzleSlot，但有任何一個未被佔用，就禁止拍照
+                    bool allOccupied = nearbyPuzzleSlots.TrueForAll(slot => slot.IsOccupied());
+                    if (!allOccupied)
+                    {
+                        Debug.Log("有 PuzzleSlot 尚未放入拼圖，無法拍照！");
+                        yield break; // 直接跳出，不執行拍照保存
+                    }
+                }
 
                 if (!photographedObjects.Contains(hit.transform))
                 {
                     Debug.Log("This object has not been photographed before");
-
-                    string photoName = target.photoName;
-                    string resourceName = target.overridePhotoResourceName;
-                    //Texture2D specifiedPhoto = Resources.Load<Texture2D>("Photos/marry");
-                    Texture2D specifiedPhoto = Resources.Load<Texture2D>(resourceName);
-                    if (specifiedPhoto != null)
+                    if (target.rewardPrefab != null)
                     {
-                        SavePhotoAsItem(specifiedPhoto, hit.transform, photoName);
-                        Debug.Log("指定素材已儲存為照片：" + photoName);
+                        // ✅ 有指定 Prefab，直接生成道具
+                        SavePrefabAsItem(target.rewardPrefab, hit.transform, target.itemName);
+                        Debug.Log("已用 rewardPrefab 儲存為道具：" + target.itemName);
                     }
                     else
                     {
-                        Debug.LogError("找不到指定圖片素材！");
+                        string photoName = target.photoName;
+                        string resourceName = target.overridePhotoResourceName;
+                        Texture2D specifiedPhoto = Resources.Load<Texture2D>(resourceName);
+                        if (specifiedPhoto != null)
+                        {
+                            SavePhotoAsItem(specifiedPhoto, hit.transform, photoName);
+                            Debug.Log("指定素材已儲存為照片：" + photoName);
+                        }
+                        else
+                        {
+                            Debug.LogError("找不到指定圖片素材！");
+                        }
                     }
                 }
                 else
@@ -131,6 +148,23 @@ public class PhotoCapture : MonoBehaviour
             Debug.Log("itemDetected 為 false，沒有偵測到目標");
         }
 
+    }
+    void SavePrefabAsItem(GameObject prefab, Transform targetObject, string itemName)
+    {
+        Item prefabItem = new Item();
+        prefabItem.itemName = itemName;
+        prefabItem.prefab = prefab;
+        PhotoTarget photoTarget = targetObject.GetComponent<PhotoTarget>();
+        if (photoTarget != null && photoTarget.IntroductionUI != null)
+        {
+            prefabItem.icon = photoTarget.IntroductionUI;
+        }
+        capturedPhotos.Add(prefabItem);
+        inventoryManager.Add(prefabItem);
+
+        photographedObjects.Add(targetObject);
+
+        Debug.Log("Prefab saved as item: " + itemName);
     }
 
     void ShowPhoto(Texture2D photoTexture)

@@ -18,3 +18,4 @@ MonoBehaviour:
   prefab: {fileID: 6667444346028538643, guid: 269ce0a4f1f8091458f36ca0a65d1a5c, type: 3}
   isPuzzlePiece: 0
   description: dvd
+  introductionImage: {fileID: 21300000, guid: acb0e13bad3973e4db2ff01362f2e598, type: 3}

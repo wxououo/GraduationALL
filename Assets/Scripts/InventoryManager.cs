@@ -29,7 +29,19 @@ public class InventoryManager : MonoBehaviour
     public Button takeOutButton;
     public List<Item> allItems;
     public TextMeshProUGUI itemDescription;
+    private MouseLook cameraController; // 用來檢查鏡頭是否已調整
 
+    public Image closeButton;                  // 關閉按鈕
+    public Image introductionImageUI;          // 顯示大圖的地方
+    public GameObject introductionPanel;       // 外層的Panel！（如果有的話）
+    private Item currentDisplayedItem;
+    private GameObject currentSpawnedObject = null;  // 目前生成在場景的物件
+
+    void Start()
+    {
+        // 獲取主相機上的 MouseLook 腳本
+        cameraController = Camera.main.GetComponent<MouseLook>();
+    }
     private void Awake()
     {
         Instance = this;
@@ -70,6 +82,18 @@ public class InventoryManager : MonoBehaviour
         {
             GameObject obj = Instantiate(InventoryItem, ItemContent);
 
+            PuzzlePiece puzzlePiece = obj.GetComponent<PuzzlePiece>();
+            if (puzzlePiece != null)
+            {
+                // 設定 itemData 屬性
+                puzzlePiece.SetItemData(item);
+                Debug.Log($"成功將 itemData 設定給 {obj.name} 的 PuzzlePiece：{item.itemName}");
+            }
+            else
+            {
+                Debug.LogError("InventoryItem Prefab 上沒有 PuzzlePiece 腳本！");
+                // 如果沒有 PuzzlePiece，你可能需要考慮你的道具欄物件結構
+            }
             var itemName = obj.transform.Find("ItemName").GetComponent<TextMeshProUGUI>();
             RectTransform nameRect = itemName.GetComponent<RectTransform>();
             //nameRect.anchoredPosition = new Vector2(40, -80);
@@ -86,13 +110,18 @@ public class InventoryManager : MonoBehaviour
 
             itemName.text = item.itemName;
             itemIcon.sprite = item.icon;
-            itemDescription.text = "";
+            //itemDescription.text = "";
 
 
             // 當點擊取出按鈕時，生成該物品
             takeOutButton.onClick.RemoveAllListeners();
-            takeOutButton.onClick.RemoveAllListeners();
-            takeOutButton.onClick.AddListener(() => TakeOutItem(item));
+            takeOutButton.onClick.AddListener(() => {
+                InventoryManager.Instance?.Remove(item); // 先從背包裡移除這個 item
+                TakeOutItem(item);                       // 然後把東西生成到場景
+                //ShowIntroduction(item);                  // 再顯示介紹圖片
+                ListItems();                             // 最後重新整理道具欄
+            });
+
             objectItemMap[obj] = item;
             AddDragFunctionality(obj, item);
         }
@@ -163,7 +192,7 @@ public class InventoryManager : MonoBehaviour
         }
         canvasGroup.blocksRaycasts = true; // 允許拖曳穿過其他 UI 元素
 
-        Collider[] hitColliders = Physics.OverlapSphere(obj.transform.position, 2.0f);
+        Collider[] hitColliders = Physics.OverlapSphere(obj.transform.position, 0.1f);
         bool validPlacement = false;
 
         foreach (Collider hitCollider in hitColliders)
@@ -183,7 +212,7 @@ public class InventoryManager : MonoBehaviour
                     break;
                 }
             }
-            else if (hitCollider.CompareTag("Interactable"))
+            else if (hitCollider.CompareTag("Interactable")&& cameraController != null && cameraController.HasAdjustedCamera )
             {
                 Debug.Log("Play");
                 InteractableManager.Instance.HandleInteraction(item, hitCollider.gameObject);
@@ -208,38 +237,72 @@ public class InventoryManager : MonoBehaviour
             ListItems();
         }
     }
-
-    public void TakeOutItem(Item item)
+    public void ShowIntroduction(Item item)
     {
-        SetSpawnPointAtCameraCenter(); // 設定物品生成點
-
-        if (item.prefab != null)
+        CloseIntroduction();
+        if (introductionImageUI != null && closeButton != null)
         {
-            // 生成物件
-            GameObject spawnedItem = Instantiate(item.prefab, spawnPoint.position, spawnPoint.rotation);
-            spawnedItem.name = item.itemName;
-
-            PuzzlePiece puzzlePiece = spawnedItem.GetComponent<PuzzlePiece>();
-            Debug.Log($"Spawning {item.itemName}, isPuzzlePiece: {item.isPuzzlePiece}");
-
-            // ⭐ 設定 pieceType：你可以根據 item 的屬性判斷
-            if (item.isPuzzlePiece)  // 假設你在 Item 類別裡有 isPhoto 這樣的欄位
-            {
-                puzzlePiece.pieceType = PieceType.Puzzle;
-            }
-            else
-            {
-                puzzlePiece.pieceType = PieceType.PhotoAlbum;
-            }
-
-            Remove(item);
-            ListItems();
-            StartCoroutine(DelayedDescriptionUpdate(item));
-            itemName.text = item.itemName;
-            itemDescription.text = item.description; // 顯示物品敘述
-            itemDescription.ForceMeshUpdate();
+            introductionImageUI.sprite = item.introductionImage;
+            introductionImageUI.gameObject.SetActive(true);
+            closeButton.gameObject.SetActive(true);
         }
+
+        // 記錄目前展示的 item
+        currentDisplayedItem = item;
     }
+
+public void TakeOutItem(Item item)
+{
+    // ⭐ 如果已經有展示的圖片，先回收
+    CloseIntroduction();
+
+    // ⭐ 顯示新的介紹圖片
+    ShowIntroduction(item);
+
+    // ⭐ 從道具欄移除
+    Remove(item);
+    ListItems();
+}
+
+
+    public void CloseIntroduction()
+    {
+        if (currentDisplayedItem != null)
+        {
+            Add(currentDisplayedItem); // 呼叫你的 Add() 方法把 item 加回道具欄
+            ListItems();               // 更新畫面（如果需要）
+            currentDisplayedItem = null; // 清掉，避免下一次出錯
+        }
+
+        // 清空介紹圖片，隱藏 Panel
+        if (introductionImageUI != null)
+        {
+            introductionImageUI.gameObject.SetActive(false);
+            introductionImageUI.sprite = null;
+        }
+
+        if (closeButton != null)
+        {
+            closeButton.gameObject.SetActive(false);
+        }
+        //introductionImageUI.gameObject.SetActive(false);
+    }
+    //private void HidePrefabUI(GameObject spawnedItem)
+    //{
+    //    // 找到所有 Image 元件，把小圖隱藏（除了模型本身）
+    //    foreach (var image in spawnedItem.GetComponentsInChildren<Image>(true))
+    //    {
+    //        image.enabled = false;
+    //    }
+
+    //    // 找到所有文字，也一起關掉
+    //    foreach (var text in spawnedItem.GetComponentsInChildren<TextMeshProUGUI>(true))
+    //    {
+    //        text.enabled = false;
+    //    }
+    //}
+
+
     private IEnumerator DelayedDescriptionUpdate(Item item)
     {
         yield return null; // 等待一幀，確保 UI 先更新

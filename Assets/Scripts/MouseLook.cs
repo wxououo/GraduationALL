@@ -63,10 +63,10 @@ public class MouseLook : MonoBehaviour
             return;
         }
         // 如果道具欄開啟，禁止視角移動與點擊檢測
-        if (isInventoryOpen || isDraggingButton)
-        {
-            return;
-        }
+        //if (isInventoryOpen || isDraggingButton)
+        //{
+        //    return;
+        //}
 
         y = Input.GetAxis("Mouse X");
         x = Input.GetAxis("Mouse Y");

@@ -18,3 +18,5 @@ MonoBehaviour:
   prefab: {fileID: 8760751104512501056, guid: 6061badbfd7e0440fad02df2b05c3be3, type: 3}
   isPuzzlePiece: 1
   description: w2
+  introductionImage: {fileID: 21300000, guid: f6fb8a7b4b020e243a8787f00ee9ec0a, type: 3}
+  rewardPrefab: {fileID: 0}
