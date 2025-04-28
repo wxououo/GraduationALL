@@ -57,7 +57,7 @@ public class MouseLook : MonoBehaviour
             Debug.LogError("Main Camera not found.");
             return;
         }
-        if (isDraggingButton)
+        if (isInventoryOpen && isDraggingButton)
         {
             Debug.Log("Dragging detected, stopping camera movement.");
             return;

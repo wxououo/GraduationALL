@@ -22,8 +22,6 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
     public GameObject targetObject;
     public GameObject revealTarget;
 
-
-
     private int puzzleSlotLayer;
 
     public bool isPlacedCorrectly = false;
@@ -91,6 +89,8 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        // 開始拖
+        FindObjectOfType<MouseLook>().SetDraggingState(true);
 
         if (itemData == null)
         {
@@ -134,21 +134,27 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
         bool placed = false;
 
-        Collider[] hitColliders = Physics.OverlapSphere(transform.position, 500.0f);
+        // ★★★【超穩：轉換滑鼠座標到世界座標】★★★
+        Vector3 screenPosition = Input.mousePosition;
+        screenPosition.z = 200.0f; // 你可以調整這個距離（要讓z稍微前一點才打得到）
+        Vector3 worldPosition = playerCamera.ScreenToWorldPoint(screenPosition);
 
-        Debug.Log($"OverlapSphere 找到 {hitColliders.Length} 個 Collider。");
+        // 直接從 worldPosition 發 OverlapSphere
+        Collider[] hitColliders = Physics.OverlapSphere(worldPosition, 700.0f);
+        Debug.Log($"OverlapSphere 從 {worldPosition} 找到 {hitColliders.Length} 個 Collider。");
+
         foreach (Collider hitCollider in hitColliders)
         {
-            Debug.Log($"檢測到的 Collider：{hitCollider.gameObject.name}, Tag: {hitCollider.tag}");
+            Debug.Log($"偵測到 Collider：{hitCollider.gameObject.name}, Tag: {hitCollider.tag}");
         }
+
         foreach (Collider hitCollider in hitColliders)
         {
-            Debug.Log("Al");
             // === Puzzle ===
             if (pieceType == PieceType.Puzzle && hitCollider.CompareTag("Puzzle"))
             {
                 PuzzleSlot slot = hitCollider.GetComponent<PuzzleSlot>();
-                if (slot != null && !slot.IsOccupied() && slot.IsWithinPlacementZone(transform.position))
+                if (slot != null && !slot.IsOccupied() && slot.IsWithinPlacementZone(worldPosition))
                 {
                     bool isPlacedCorrectly = PuzzleManager.Instance.PlacePuzzlePiece(this);
                     if (isPlacedCorrectly)
@@ -160,35 +166,27 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
                     }
                 }
             }
-
             // === Photo Album ===
             else if (pieceType == PieceType.PhotoAlbum && hitCollider.CompareTag("PhotoSlot"))
             {
-                Debug.Log("找到 PhotoSlot！");
                 PhotoSlot photoSlot = hitCollider.GetComponent<PhotoSlot>();
-                bool isOccupied = photoSlot.IsOccupied();
-                bool isWithinZone = photoSlot.IsWithinPlacementZone(transform.position);
-                bool isValidPiece = photoSlot.IsValidForPiece(this);
-
-                Debug.Log($"Slot 檢查：Occupied={isOccupied}, WithinZone={isWithinZone}, ValidPiece={isValidPiece}");
-                if (photoSlot != null && !photoSlot.IsOccupied() && photoSlot.IsWithinPlacementZone(transform.position))
+                if (photoSlot != null && !photoSlot.IsOccupied() && photoSlot.IsWithinPlacementZone(worldPosition))
                 {
                     bool isPlacedCorrectly = PhotoAlbumManager.Instance.PlacePhotoPiece(this, photoSlot);
                     if (isPlacedCorrectly)
                     {
                         placed = true;
-                        Debug.Log("照片放置成功！");
                         InventoryManager.Instance?.Remove(itemData);
                         InventoryManager.Instance?.ListItems();
                         break;
                     }
                 }
             }
-
-            // === Reveal Trigger (改用 Raycast) ===
+            // === Reveal Trigger ===
             else if (hitCollider.CompareTag("RevealTrigger"))
             {
-                RevealZone revealZone = hitCollider.GetComponent<RevealZone>();
+                // 🔥 最穩：從 hitCollider 的自己或父物件找 RevealZone
+                RevealZone revealZone = hitCollider.GetComponentInParent<RevealZone>();
                 if (revealZone != null && revealZone.TryReveal(itemData.id))
                 {
                     placed = true;
@@ -205,7 +203,12 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             Debug.Log("沒有合適的放置位置，物件退回原位");
             ReturnToStartPosition();
         }
+        // 結束拖
+        FindObjectOfType<MouseLook>().SetDraggingState(false);
+
     }
+
+
 
 
     //Debug.Log($"觸發 RevealTrigger：{hitCollider.name}");
