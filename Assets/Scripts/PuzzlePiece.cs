@@ -134,7 +134,8 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
         bool placed = false;
 
-        Collider[] hitColliders = Physics.OverlapSphere(transform.position, 2.0f);
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, 500.0f);
+
         Debug.Log($"OverlapSphere 找到 {hitColliders.Length} 個 Collider。");
         foreach (Collider hitCollider in hitColliders)
         {

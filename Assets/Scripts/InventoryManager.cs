@@ -87,7 +87,7 @@ public class InventoryManager : MonoBehaviour
             {
                 // 設定 itemData 屬性
                 puzzlePiece.SetItemData(item);
-                Debug.Log($"成功將 itemData 設定給 {obj.name} 的 PuzzlePiece：{item.itemName}");
+                //Debug.Log($"成功將 itemData 設定給 {obj.name} 的 PuzzlePiece：{item.itemName}");
             }
             else
             {
@@ -192,7 +192,7 @@ public class InventoryManager : MonoBehaviour
         }
         canvasGroup.blocksRaycasts = true; // 允許拖曳穿過其他 UI 元素
 
-        Collider[] hitColliders = Physics.OverlapSphere(obj.transform.position, 0.1f);
+        Collider[] hitColliders = Physics.OverlapSphere(obj.transform.position, 10.0f);
         bool validPlacement = false;
 
         foreach (Collider hitCollider in hitColliders)
@@ -287,20 +287,6 @@ public void TakeOutItem(Item item)
         }
         //introductionImageUI.gameObject.SetActive(false);
     }
-    //private void HidePrefabUI(GameObject spawnedItem)
-    //{
-    //    // 找到所有 Image 元件，把小圖隱藏（除了模型本身）
-    //    foreach (var image in spawnedItem.GetComponentsInChildren<Image>(true))
-    //    {
-    //        image.enabled = false;
-    //    }
-
-    //    // 找到所有文字，也一起關掉
-    //    foreach (var text in spawnedItem.GetComponentsInChildren<TextMeshProUGUI>(true))
-    //    {
-    //        text.enabled = false;
-    //    }
-    //}
 
 
     private IEnumerator DelayedDescriptionUpdate(Item item)

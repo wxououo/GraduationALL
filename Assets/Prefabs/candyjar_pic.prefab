@@ -13,9 +13,10 @@ GameObject:
   - component: {fileID: -5773886288358940331}
   - component: {fileID: 3384334092063792923}
   - component: {fileID: 6046251163850787303}
+  - component: {fileID: -8307167660740771509}
   m_Layer: 0
   m_Name: candyjar_pic
-  m_TagString: Untagged
+  m_TagString: RevealTrigger
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -102,6 +103,7 @@ MonoBehaviour:
   Item: {fileID: 11400000, guid: 99092285fafd44395b3cee36527345a4, type: 2}
   pickupKey: 
   requiresZoom: 0
+  itemToDisplayOnPickup: {fileID: 0}
 --- !u!114 &3384334092063792923
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -136,3 +138,16 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 5.71, y: 6.03, z: 0.2}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &-8307167660740771509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7936200887751524800}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e82d8521fc9bcbf4eaaa94a905e6a9af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  requiresZoom: 1

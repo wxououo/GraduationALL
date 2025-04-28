@@ -69,7 +69,8 @@ public class PhotoCapture : MonoBehaviour
         if (itemDetected)
         {
             Debug.Log("Item Detected: " + hit.collider.gameObject.name); // 確認擊中的物件名稱
-            var target = hit.transform.GetComponent<PhotoTarget>();
+            var target = hit.collider.GetComponentInParent<PhotoTarget>();
+
             Debug.Log("PhotoTarget component: " + target); // 輸出 target 變數的值
 
                 if (target != null)

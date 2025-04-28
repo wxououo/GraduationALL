@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 8023490927617979109}
   m_Layer: 0
   m_Name: marryPhoto
-  m_TagString: Untagged
+  m_TagString: PhotoSlot
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
