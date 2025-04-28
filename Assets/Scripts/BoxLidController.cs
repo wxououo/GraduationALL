@@ -39,6 +39,7 @@ public class BoxLidController : MonoBehaviour
             boxCollider.enabled = false; // Disable the collider when the lid is opened
             Debug.Log("Box collider disabled.");
         }
+
         // Ensure the open state is saved persistently
         PlayerPrefs.SetInt(BoxLidStateKey, 1);
         PlayerPrefs.Save();
