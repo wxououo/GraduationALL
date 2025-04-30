@@ -212,7 +212,7 @@ public class InventoryManager : MonoBehaviour
                     break;
                 }
             }
-            else if (hitCollider.CompareTag("Interactable")&& cameraController != null && cameraController.HasAdjustedCamera )
+            else if (hitCollider.CompareTag("Interactable") )
             {
                 Debug.Log("Play");
                 InteractableManager.Instance.HandleInteraction(item, hitCollider.gameObject);

@@ -24,7 +24,7 @@ public class PhotoAlbumManager : MonoBehaviour
         Instance = this;
 
         // ¸ü¤J¼v¤ù¯À§÷
-        photoIdToVideoClip[0] = Resources.Load<VideoClip>("Videos/marry");
+        photoIdToVideoClip[0] = Resources.Load<VideoClip>("Video/Marry0422");
         photoIdToVideoClip[1] = Resources.Load<VideoClip>("Videos/clipB");
         photoIdToVideoClip[2] = Resources.Load<VideoClip>("Videos/clipA");
         photoIdToVideoClip[3] = Resources.Load<VideoClip>("Videos/clipB");

@@ -73,7 +73,7 @@ public class PhotoCapture : MonoBehaviour
 
             Debug.Log("PhotoTarget component: " + target); // 輸出 target 變數的值
 
-                if (target != null)
+            if (target != null)
             {
                 Debug.Log("PhotoTarget component enabled: " + target.enabled);
                 Debug.Log("Hit has PhotoTarget component");

@@ -31,10 +31,10 @@ public class MouseLook : MonoBehaviour
     // 控制道具欄是否開啟的變數
     private bool isInventoryOpen = false;
 
-    public void SetInventoryState(bool state)
-    {
-        isInventoryOpen = state;
-    }
+    //public void SetInventoryState(bool state)
+    //{
+    //    isInventoryOpen = state;
+    //}
 
     public bool isDraggingButton { get; private set; } = false;
     public void SetDraggingState(bool state)

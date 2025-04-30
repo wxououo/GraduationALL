@@ -7,6 +7,17 @@ public class PhotoSlot : MonoBehaviour
     public int requiredPhotoId;
     private bool occupied = false;
     public GameObject PhotoToReveal;
+    private string OccupiedKey => $"PhotoSlot_{requiredPhotoId}_Occupied";
+
+    private void Start()
+    {
+        // 啟動時從 PlayerPrefs 載入佔用狀態
+        occupied = PlayerPrefs.GetInt(OccupiedKey, 0) == 1;
+        if (occupied && PhotoToReveal != null)
+        {
+            PhotoToReveal.SetActive(true);
+        }
+    }
 
     public bool IsOccupied()
     {
@@ -21,6 +32,8 @@ public class PhotoSlot : MonoBehaviour
     public void MarkAsOccupied()
     {
         occupied = true;
+        PlayerPrefs.SetInt(OccupiedKey, 1);
+        PlayerPrefs.Save();
     }
     public bool IsWithinPlacementZone(Vector3 piecePosition)
     {
@@ -33,6 +46,15 @@ public class PhotoSlot : MonoBehaviour
         if (PhotoToReveal != null)
         {
             PhotoToReveal.SetActive(true);
+        }
+    }
+    public void ResetSlot()
+    {
+        occupied = false;
+        PlayerPrefs.DeleteKey(OccupiedKey);
+        if (PhotoToReveal != null)
+        {
+            PhotoToReveal.SetActive(false);
         }
     }
 }
