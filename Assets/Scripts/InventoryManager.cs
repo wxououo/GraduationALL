@@ -1,8 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using UnityEngine.Video;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
@@ -46,6 +44,15 @@ public class InventoryManager : MonoBehaviour
     {
         Instance = this;
     }
+    void Update()
+    {
+        if (cameraController.isDraggingButton && Input.GetMouseButtonUp(0))
+        {
+            // 保險用：如果滑鼠已經放開但狀態還是 true，強制修正
+            cameraController.SetDraggingState(false);
+        }
+    }
+
 
     private void OnEnable()
     {
@@ -166,6 +173,10 @@ public class InventoryManager : MonoBehaviour
         }
         canvasGroup.blocksRaycasts = false; // Allow dragging through UI elements
         obj.transform.SetParent(null);
+        if (cameraController != null)
+        {
+            cameraController.SetDraggingState(true);
+        }
     }
     private void OnDrag(GameObject obj)
     {
@@ -191,6 +202,10 @@ public class InventoryManager : MonoBehaviour
             canvasGroup = obj.AddComponent<CanvasGroup>();
         }
         canvasGroup.blocksRaycasts = true; // 允許拖曳穿過其他 UI 元素
+        if (cameraController != null)
+        {
+            cameraController.SetDraggingState(false); // 👉 拖曳結束
+        }
 
         Collider[] hitColliders = Physics.OverlapSphere(obj.transform.position, 10.0f);
         bool validPlacement = false;
@@ -288,14 +303,6 @@ public void TakeOutItem(Item item)
         //introductionImageUI.gameObject.SetActive(false);
     }
 
-
-    private IEnumerator DelayedDescriptionUpdate(Item item)
-    {
-        yield return null; // 等待一幀，確保 UI 先更新
-        itemName.text = item.itemName;
-        itemDescription.text = item.description; // 顯示物品敘述
-        itemDescription.ForceMeshUpdate();
-    }
     void SetSpawnPointAtCameraCenter()
     {
         // 將 spawnPoint 設置在攝影機正前方的某個距離

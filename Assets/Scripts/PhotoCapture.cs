@@ -25,22 +25,35 @@ public class PhotoCapture : MonoBehaviour
     public int photoWidth = 800;
     public int photoHeight = 600;
 
-    private void Update()
+    [SerializeField] private CanvasGroup photoCanvasGroup;
+[SerializeField] private float fadeDuration = 1.0f;
+[SerializeField] private float displayTime = 3.0f;
+    private void Awake()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (photoFrame.activeInHierarchy)
         {
-            if (cameraObject != null && cameraObject.activeInHierarchy)
-            {
-                photoFrame.SetActive(false);
-                if (!viewPhoto)
-                {
-                    StartCoroutine(CapturePhoto());
-                }
-                else
-                {
-                    RemovePhoto();
-                }
-            }
+            photoCanvasGroup = photoFrame.GetComponent<CanvasGroup>();
+        }
+        else
+        {
+            photoFrame.SetActive(true);
+            photoCanvasGroup = photoFrame.GetComponent<CanvasGroup>();
+            photoFrame.SetActive(false);  // 還原
+        }
+    }
+
+
+    // 給 UI Button 呼叫這個方法
+    public void TakePhotoButton()
+    {
+        Debug.Log("👉 拍照按鈕被點了");
+        if (!viewPhoto && cameraObject.activeInHierarchy)
+        {
+            StartCoroutine(CapturePhoto());
+        }
+        else
+        {
+            RemovePhoto(); // 再次點擊按鈕則關閉照片
         }
     }
 
@@ -50,106 +63,61 @@ public class PhotoCapture : MonoBehaviour
         cameraObject.SetActive(false);
         yield return new WaitForEndOfFrame();
 
-        // 检测相机前方是否有目标物体
-        int layerMask = LayerMask.GetMask("PhotoTargetLayer");
-        RaycastHit hit;
-        bool itemDetected = Physics.Raycast(cameraObject.transform.position, cameraObject.transform.forward, out hit, 5000.0f, layerMask);
-        Debug.Log("Item Detected: " + hit.collider.gameObject.name);
-
-        // 创建一个新的 Texture2D 来存储每次拍摄的照片
+        // 拍照截圖（無論有沒有拍到 PhotoTarget 都執行）
         Texture2D screenCapture = new Texture2D(photoWidth, photoHeight, TextureFormat.RGB24, false);
         Rect regionToRead = new Rect((Screen.width - photoWidth) / 2, (Screen.height - photoHeight) / 2, photoWidth, photoHeight);
         screenCapture.ReadPixels(regionToRead, 0, 0, false);
         screenCapture.Apply();
 
-        cameraObject.SetActive(true);
         ShowPhoto(screenCapture);
+        cameraObject.SetActive(true);
 
-        // 如果检测到目标物体且该物体有 PhotoTarget 组件，并且该物体尚未拍摄过照片
-        if (itemDetected)
+        // 嘗試偵測目標物件
+        int layerMask = LayerMask.GetMask("PhotoTargetLayer");
+        RaycastHit hit;
+        bool itemDetected = Physics.Raycast(cameraObject.transform.position, cameraObject.transform.forward, out hit, 5000.0f, layerMask);
+
+        if (!itemDetected) yield break;
+
+        var target = hit.collider.GetComponentInParent<PhotoTarget>();
+        if (target == null || photographedObjects.Contains(hit.transform)) yield break;
+
+        // 搜尋附近拼圖狀態
+        float searchRadius = 50.0f;
+        Collider[] nearbyColliders = Physics.OverlapSphere(hit.transform.position, searchRadius);
+        List<PuzzleSlot> nearbySlots = new List<PuzzleSlot>();
+        foreach (var col in nearbyColliders)
         {
-            Debug.Log("Item Detected: " + hit.collider.gameObject.name); // 確認擊中的物件名稱
-            var target = hit.collider.GetComponentInParent<PhotoTarget>();
+            PuzzleSlot slot = col.GetComponentInChildren<PuzzleSlot>();
+            if (slot != null) nearbySlots.Add(slot);
+        }
 
-            Debug.Log("PhotoTarget component: " + target); // 輸出 target 變數的值
+        if (nearbySlots.Count > 0 && !nearbySlots.TrueForAll(slot => slot.IsOccupied()))
+        {
+            Debug.Log("有拼圖未放入，無法生成道具。");
+            yield break;
+        }
 
-            if (target != null)
-            {
-                Debug.Log("PhotoTarget component enabled: " + target.enabled);
-                Debug.Log("Hit has PhotoTarget component");
-
-                // 取得被 Raycast 擊中的物件 transform
-                Transform targetTransform = hit.transform;
-
-                // ✅ 搜索該物件周圍是否有 PuzzleSlot
-                float searchRadius = 50.0f; // 可調參數
-                Collider[] nearbyColliders = Physics.OverlapSphere(targetTransform.position, searchRadius);
-                List<PuzzleSlot> nearbyPuzzleSlots = new List<PuzzleSlot>();
-
-                foreach (var collider in nearbyColliders)
-                {
-                    Debug.Log("Overlap 物件：" + collider.name);
-                    PuzzleSlot slot = collider.GetComponentInChildren<PuzzleSlot>();
-
-                    if (slot != null)
-                    {
-                        nearbyPuzzleSlots.Add(slot);
-                        Debug.Log($"發現 PuzzleSlot：{slot.name}，是否被佔用：{slot.IsOccupied()}");
-                    }
-                }
-
-                if (nearbyPuzzleSlots.Count > 0)
-                {
-                    // 如果有 PuzzleSlot，但有任何一個未被佔用，就禁止拍照
-                    bool allOccupied = nearbyPuzzleSlots.TrueForAll(slot => slot.IsOccupied());
-                    if (!allOccupied)
-                    {
-                        Debug.Log("有 PuzzleSlot 尚未放入拼圖，無法拍照！");
-                        yield break; // 直接跳出，不執行拍照保存
-                    }
-                }
-
-                if (!photographedObjects.Contains(hit.transform))
-                {
-                    Debug.Log("This object has not been photographed before");
-                    if (target.rewardPrefab != null)
-                    {
-                        // ✅ 有指定 Prefab，直接生成道具
-                        SavePrefabAsItem(target.rewardPrefab, hit.transform, target.itemName);
-                        Debug.Log("已用 rewardPrefab 儲存為道具：" + target.itemName);
-                    }
-                    else
-                    {
-                        string photoName = target.photoName;
-                        string resourceName = target.overridePhotoResourceName;
-                        Texture2D specifiedPhoto = Resources.Load<Texture2D>(resourceName);
-                        if (specifiedPhoto != null)
-                        {
-                            SavePhotoAsItem(specifiedPhoto, hit.transform, photoName);
-                            Debug.Log("指定素材已儲存為照片：" + photoName);
-                        }
-                        else
-                        {
-                            Debug.LogError("找不到指定圖片素材！");
-                        }
-                    }
-                }
-                else
-                {
-                    Debug.Log("這張照片已經拍過了！");
-                }
-            }
-            else
-            {
-                Debug.Log("Hit 的物件上沒有 PhotoTarget");
-            }
+        // ✅ 儲存為道具
+        if (target.rewardPrefab != null)
+        {
+            SavePrefabAsItem(target.rewardPrefab, hit.transform, target.itemName);
         }
         else
         {
-            Debug.Log("itemDetected 為 false，沒有偵測到目標");
+            Texture2D overrideTex = Resources.Load<Texture2D>(target.overridePhotoResourceName);
+            if (overrideTex != null)
+            {
+                SavePhotoAsItem(overrideTex, hit.transform, target.photoName);
+                ShowPhoto(overrideTex); // 替換顯示圖為指定圖片
+            }
+            else
+            {
+                Debug.LogWarning("找不到指定的 override 素材圖！");
+            }
         }
-
     }
+
     void SavePrefabAsItem(GameObject prefab, Transform targetObject, string itemName)
     {
         Item prefabItem = new Item();
@@ -171,8 +139,11 @@ public class PhotoCapture : MonoBehaviour
     void ShowPhoto(Texture2D photoTexture)
     {
         Sprite photoSprite = Sprite.Create(photoTexture, new Rect(0.0f, 0.0f, photoTexture.width, photoTexture.height), new Vector2(0.5f, 0.5f), photoHeight);
+        photoFrame.SetActive(true);        
         photoDisplayArea.sprite = photoSprite;
-        photoFrame.SetActive(true);
+
+        photoCanvasGroup.alpha = 0f;
+        StartCoroutine(FadeInAndAutoHide());
     }
 
     void RemovePhoto()
@@ -200,6 +171,30 @@ public class PhotoCapture : MonoBehaviour
         photographedObjects.Add(targetObject);
 
         Debug.Log("Photo saved as item: " + photoName);
+    }
+    IEnumerator FadeInAndAutoHide()
+    {
+        float timer = 0f;
+        while (timer < fadeDuration)
+        {
+            timer += Time.deltaTime;
+            photoCanvasGroup.alpha = Mathf.Lerp(0f, 1f, timer / fadeDuration);
+            yield return null;
+        }
+
+        photoCanvasGroup.alpha = 1f;
+        yield return new WaitForSeconds(displayTime);
+
+        timer = 0f;
+        while (timer < fadeDuration)
+        {
+            timer += Time.deltaTime;
+            photoCanvasGroup.alpha = Mathf.Lerp(1f, 0f, timer / fadeDuration);
+            yield return null;
+        }
+
+        photoCanvasGroup.alpha = 0f;
+        RemovePhoto(); // 關閉 UI、重設相機等
     }
 
 }

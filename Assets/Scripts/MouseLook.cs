@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
+
 
 public class MouseLook : MonoBehaviour
 {
@@ -40,7 +42,8 @@ public class MouseLook : MonoBehaviour
     public void SetDraggingState(bool state)
     {
         isDraggingButton = state;
-        Debug.Log("Dragging State Changed: " + isDraggingButton);
+        Debug.Log("Dragging State Changed: " + isDraggingButton + " at " + Time.time);
+        if (state) Debug.Log("目前拖曳物件：" + EventSystem.current.currentSelectedGameObject);
     }
 
     void Start()
@@ -57,17 +60,16 @@ public class MouseLook : MonoBehaviour
             Debug.LogError("Main Camera not found.");
             return;
         }
-        if (isInventoryOpen && isDraggingButton)
+        if (isDraggingButton)
         {
             Debug.Log("Dragging detected, stopping camera movement.");
             return;
         }
-        // 如果道具欄開啟，禁止視角移動與點擊檢測
-        //if (isInventoryOpen || isDraggingButton)
-        //{
-        //    return;
-        //}
-
+        if (isDraggingButton && !Input.GetMouseButton(0))
+        {
+            Debug.LogWarning("Detected mouse released but dragging still true, auto-resetting.");
+            SetDraggingState(false);
+        }
         y = Input.GetAxis("Mouse X");
         x = Input.GetAxis("Mouse Y");
         rotate = new Vector3(x * sensitivityX, y * sensitivityY, 0);

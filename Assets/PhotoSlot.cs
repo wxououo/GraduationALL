@@ -37,7 +37,7 @@ public class PhotoSlot : MonoBehaviour
     }
     public bool IsWithinPlacementZone(Vector3 piecePosition)
     {
-        Debug.Log($"槽位位置: {transform.position}, 拖曳位置: {piecePosition}, 距離: {Vector3.Distance(transform.position, piecePosition)}");
+        //Debug.Log($"槽位位置: {transform.position}, 拖曳位置: {piecePosition}, 距離: {Vector3.Distance(transform.position, piecePosition)}");
         float distance = Vector3.Distance(piecePosition, transform.position);
         return distance < 150000000f; // 你可以自訂距離範圍（例如 1.5f 為可放置距離）
     }

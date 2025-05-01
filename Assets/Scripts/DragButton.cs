@@ -30,7 +30,8 @@ public class DragButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
         {
             mouseLook.SetDraggingState(true); // 鎖定畫面旋轉
         }
-}
+        FindObjectOfType<MouseLook>().SetDraggingState(true);
+    }
     public void OnDrag(PointerEventData eventData)
     {
         Vector2 newPosition = rectTransform.anchoredPosition + eventData.delta / canvas.scaleFactor;
@@ -60,6 +61,7 @@ public class DragButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
                 mouseLook.SetDraggingState(false); // 解除鎖定
                 ReturnToStartPosition();
         }
+        FindObjectOfType<MouseLook>().SetDraggingState(false);
     }
     private void ReturnToStartPosition()
     {

@@ -170,7 +170,10 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
             else if (pieceType == PieceType.PhotoAlbum && hitCollider.CompareTag("PhotoSlot"))
             {
                 PhotoSlot photoSlot = hitCollider.GetComponent<PhotoSlot>();
-                if (photoSlot != null && !photoSlot.IsOccupied() && photoSlot.IsWithinPlacementZone(worldPosition))
+                if (photoSlot != null
+                    && !photoSlot.IsOccupied()
+                  && photoSlot.IsWithinPlacementZone(worldPosition)
+                  && photoSlot.IsValidForPiece(this))
                 {
                     bool isPlacedCorrectly = PhotoAlbumManager.Instance.PlacePhotoPiece(this, photoSlot);
                     if (isPlacedCorrectly)
@@ -207,24 +210,6 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         FindObjectOfType<MouseLook>().SetDraggingState(false);
 
     }
-
-
-
-
-    //Debug.Log($"觸發 RevealTrigger：{hitCollider.name}");
-    //RevealZone revealZone = hitCollider.GetComponent<RevealZone>();
-    //if (revealZone != null)
-    //{
-    //    Debug.Log("找到 RevealZone 組件，嘗試呼叫 TryReveal...");
-    //    bool revealed = revealZone.TryReveal(itemData.id);
-    //    Debug.Log("Reveal 嘗試結果：" + revealed);
-    //    if (revealed)
-    //    {
-    //        placed = true;
-    //        InventoryManager.Instance?.Remove(itemData);
-    //        break;
-    //    }
-    //}
 
 
     public void ResetPiece()

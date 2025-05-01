@@ -4442,9 +4442,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2cc8fd809c7c95e4a89f1a029e3c9db1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SceneCamera: {fileID: 630662285}
+  albumFrame: {fileID: 0}
+  albumPages: []
   buttonToHide: {fileID: 7645349437910557299}
-  AlbumFrame: {fileID: 5502307872898312040}
 --- !u!1 &4789892006610705082
 GameObject:
   m_ObjectHideFlags: 0
