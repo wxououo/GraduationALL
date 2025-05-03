@@ -12,10 +12,12 @@ public class InventoryManager : MonoBehaviour
     private Dictionary<GameObject, Item> objectItemMap = new Dictionary<GameObject, Item>();
     private List<GameObject> inventoryUIItems = new List<GameObject>(); // 改為追蹤UI物件
 
+
     public List<Item> Items = new List<Item>();
 
     public Transform ItemContent;
     public GameObject InventoryItem;
+    public GameObject ViewPort;
 
     public Transform spawnPoint; // 物品生成的位置
 
@@ -27,7 +29,10 @@ public class InventoryManager : MonoBehaviour
     public Button takeOutButton;
     public List<Item> allItems;
     public TextMeshProUGUI itemDescription;
-    private MouseLook cameraController; // 用來檢查鏡頭是否已調整
+
+    public MouseLook cameraController; // 用來檢查鏡頭是否已調整
+  public bool IsInventoryOpen { get; private set; } = false;
+    public bool IsDraggingItem { get; private set; } = false;
 
     public Image closeButton;                  // 關閉按鈕
     public Image introductionImageUI;          // 顯示大圖的地方
@@ -61,7 +66,13 @@ public class InventoryManager : MonoBehaviour
 
     public void Add(Item item)
     {
-        Items.Add(item);
+        // 檢查是否已經有相同 ID 的物品
+        if (Items.Exists(existingItem => existingItem.id == item.id))
+        {
+            Debug.Log($"物品 {item.itemName} (ID: {item.id}) 已經在物品欄中");
+            return;
+        }
+       Items.Add(item);
         ListItems();
         SaveInventory();
     }
@@ -173,7 +184,7 @@ public class InventoryManager : MonoBehaviour
         }
         canvasGroup.blocksRaycasts = false; // Allow dragging through UI elements
         obj.transform.SetParent(null);
-        if (cameraController != null)
+        if (cameraController != null && ViewPort.activeSelf)
         {
             cameraController.SetDraggingState(true);
         }
@@ -336,39 +347,136 @@ public void TakeOutItem(Item item)
         ListItems();
     }
 
+    [System.Serializable]
+    public class SerializableItem
+    {
+        public int id;
+        public string itemName;
+        public bool isPuzzlePiece;
+        public string prefabPath;
+        public string iconPath;
+        public string description;
+        public string introductionImagePath;
+        public string rewardPrefabPath;
+        public byte[] iconTextureData;  // 新增：用於保存動態創建的照片
+        public int iconWidth;           // 新增：照片寬度
+        public int iconHeight;          // 新增：照片高度
+    }
+
+    [System.Serializable]
+    public class SerializableItemList
+    {
+        public List<SerializableItem> items;
+    }
+
     public void SaveInventory()
     {
-        PlayerPrefs.SetInt("ItemCount", Items.Count); // 保存道具數量
+        List<SerializableItem> serializableItems = new List<SerializableItem>();
 
-        for (int i = 0; i < Items.Count; i++)
+        foreach (var item in Items)
         {
-            PlayerPrefs.SetInt("Item_" + i, Items[i].id);
-            // 根據需求儲存更多道具屬性，例如 icon, quantity 等等
+            SerializableItem serializableItem = new SerializableItem
+            {
+                id = item.id,
+                itemName = item.itemName,
+                isPuzzlePiece = item.isPuzzlePiece,
+                prefabPath = item.prefab != null ? item.prefab.name : null,
+                description = item.description ?? null,
+                introductionImagePath = item.introductionImage != null ? item.introductionImage.name : null,
+                rewardPrefabPath = item.rewardPrefab != null ? item.rewardPrefab.name : null
+            };
+
+            // 處理動態創建的照片
+            if (item.icon != null)
+            {
+                try
+                {
+                    // 如果是動態創建的照片（從 PhotoCapture 來的）
+                    if (item.icon.name.Contains("PhotoCapture"))
+                    {
+                        Texture2D texture = item.icon.texture;
+                        if (texture != null)
+                        {
+                            serializableItem.iconTextureData = texture.EncodeToPNG();
+                            serializableItem.iconWidth = texture.width;
+                            serializableItem.iconHeight = texture.height;
+                        }
+                    }
+                    else
+                    {
+                        // 如果是從 Resources 載入的圖片，只保存路徑
+                        serializableItem.iconPath = item.icon.name;
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogWarning($"無法保存圖片 {item.icon.name}: {e.Message}");
+                    // 如果無法讀取圖片，至少保存圖片名稱
+                    serializableItem.iconPath = item.icon.name;
+                }
+            }
+
+            serializableItems.Add(serializableItem);
         }
+
+        string json = JsonUtility.ToJson(new SerializableItemList { items = serializableItems });
+        PlayerPrefs.SetString("InventoryData", json);
         PlayerPrefs.Save();
+        Debug.Log($"Saved {Items.Count} items to inventory");
     }
     public void LoadInventory()
     {
-        int itemCount = PlayerPrefs.GetInt("ItemCount", 0); // 獲取保存的道具數量
-        Items.Clear(); // 清除當前的道具清單
-
-        for (int i = 0; i < itemCount; i++)
+        string json = PlayerPrefs.GetString("InventoryData", "");
+        if (string.IsNullOrEmpty(json))
         {
-            int itemID = PlayerPrefs.GetInt("Item_" + i);
-            Item newItem = FindItemByID(itemID);
-            if (newItem != null)
-            {
-                Items.Add(newItem);
+            Debug.Log("No saved inventory data found");
+            return;
+        }
 
+        SerializableItemList data = JsonUtility.FromJson<SerializableItemList>(json);
+        Items.Clear();
+
+        foreach (var serializableItem in data.items)
+        {
+            // 從 allItems 中找到對應 ID 的物品模板
+            Item templateItem = allItems.Find(item => item.id == serializableItem.id);
+
+            if (templateItem != null)
+            {
+                // 創建物品實例
+                Item newItem = ScriptableObject.CreateInstance<Item>();
+
+                // 複製模板物品的所有屬性
+                newItem.id = templateItem.id;
+                newItem.itemName = templateItem.itemName;
+                newItem.isPuzzlePiece = templateItem.isPuzzlePiece;
+                newItem.description = templateItem.description;
+                newItem.prefab = templateItem.prefab;
+                newItem.introductionImage = templateItem.introductionImage;
+                newItem.rewardPrefab = templateItem.rewardPrefab;
+
+                // 如果是動態創建的照片，使用保存的圖像
+                if (serializableItem.iconTextureData != null && serializableItem.iconTextureData.Length > 0)
+                {
+                    Texture2D texture = new Texture2D(serializableItem.iconWidth, serializableItem.iconHeight);
+                    texture.LoadImage(serializableItem.iconTextureData);
+                    newItem.icon = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                }
+                else
+                {
+                    newItem.icon = templateItem.icon;
+                }
+
+                Items.Add(newItem);
             }
             else
             {
-                Debug.LogError($"Missing item data for ID {itemID}. Ensure the item exists in allItems.");
+                Debug.LogError($"找不到 ID 為 {serializableItem.id} 的物品模板");
             }
         }
-
-        ListItems(); // 更新道具介面顯示
-        ClearDuplicateSceneObjects(); // 移到這裡，在所有道具載入後執行
+        ClearDuplicateSceneObjects();
+        ListItems();
+        Debug.Log($"Loaded {Items.Count} items from inventory");
     }
     private void ClearDuplicateSceneObjects()
     {

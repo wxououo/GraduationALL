@@ -2,8 +2,10 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
+
 public class DragButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
+    public GameObject Button;
     public Canvas canvas;
     private RectTransform rectTransform;
     private Vector2 initialPosition;
@@ -26,7 +28,7 @@ public class DragButton : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
     }
     public void OnBeginDrag(PointerEventData eventData)
     {
-        if (mouseLook != null)
+        if (mouseLook != null && Button.activeSelf)
         {
             mouseLook.SetDraggingState(true); // 鎖定畫面旋轉
         }

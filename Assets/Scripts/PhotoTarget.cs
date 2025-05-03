@@ -10,4 +10,5 @@ public class PhotoTarget : MonoBehaviour
     public GameObject rewardPrefab;
     public string itemName;
     public Sprite IntroductionUI;
+    public int itemID;  // 新增：物品的 ID，用於在 InventoryManager 中找到對應的物品模板
 }

@@ -30,6 +30,11 @@ public class MouseLook : MonoBehaviour
     private Vector3 initialMousePosition;  // 滑鼠按下的初始位置
     private float clickThreshold = 5.0f;   // 滑鼠移動的距離閾值
 
+    public Vector2 zoomYawLimit = new Vector2(-30f, 30f); // 左右 (Y 軸)
+    public Vector2 zoomPitchLimit = new Vector2(-15f, 15f); // 上下 (X 軸)
+
+    private Vector3 zoomBaseRotation; // Zoom 當下的基礎角度
+
     // 控制道具欄是否開啟的變數
     private bool isInventoryOpen = false;
 
@@ -104,6 +109,9 @@ public class MouseLook : MonoBehaviour
                         Camera.main.transform.position = zoomTarget.position;
                         Camera.main.transform.rotation = zoomTarget.rotation;
                         hasAdjustedCamera = true;
+                        //isZooming = true;
+
+                        zoomBaseRotation = transform.eulerAngles; // 記錄當下角度作為限制中心
                     }
                 }
             }
@@ -118,9 +126,41 @@ public class MouseLook : MonoBehaviour
         }
 
         // 拖動視角
-        if (isMousePressed && !hasAdjustedCamera)
+        if (isMousePressed)
         {
-            transform.eulerAngles = transform.eulerAngles - rotate;
+            Vector3 rotationDelta = new Vector3(x * sensitivityX, y * sensitivityY, 0);
+
+            if (hasAdjustedCamera)
+            {
+                // 計算限制後的新角度
+                Vector3 newRotation = transform.eulerAngles - rotationDelta;
+
+                float pitch = ClampAngle(newRotation.x, zoomBaseRotation.x + zoomPitchLimit.x, zoomBaseRotation.x + zoomPitchLimit.y);
+                float yaw = ClampAngle(newRotation.y, zoomBaseRotation.y + zoomYawLimit.x, zoomBaseRotation.y + zoomYawLimit.y);
+
+                transform.eulerAngles = new Vector3(pitch, yaw, 0);
+            }
+            else if (!hasAdjustedCamera)
+            {
+                transform.eulerAngles = transform.eulerAngles - rotationDelta;
+            }
         }
     }
+    private float ClampAngle(float angle, float min, float max)
+{
+    angle = angle % 360;
+    if (angle < 0) angle += 360;
+
+    min = min % 360;
+    if (min < 0) min += 360;
+
+    max = max % 360;
+    if (max < 0) max += 360;
+
+    if (min < max)
+        return Mathf.Clamp(angle, min, max);
+    else
+        return (angle > min || angle < max) ? angle : (Mathf.Abs(angle - min) < Mathf.Abs(angle - max) ? min : max);
+}
+
 }

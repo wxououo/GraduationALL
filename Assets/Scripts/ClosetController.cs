@@ -11,8 +11,9 @@ public class ClosetController : MonoBehaviour
     public float rotationSpeed = 100f; // Speed for rotation
     public bool isLeftDoor = false; // Set this to true for the left door, false for the right door
     private float precisionThreshold = 1f; // Precision tolerance for stopping rotation
-    public bool requiresZoom = false; // 是否需要鏡頭放大才能切換場景
-    private MouseLook cameraController; // 用來檢查鏡頭是否已調整
+    public bool requiresZoom = false;
+    private MouseLook cameraController;
+    public AudioSource audioSource; // AudioSource for the door sound
 
     void Start()
     {
@@ -41,13 +42,15 @@ public class ClosetController : MonoBehaviour
     {
         StopAllCoroutines(); // Stop any ongoing movement
         if (cameraController.HasAdjustedCamera)
-            {
+        {
             if (isOpened)
             {
+                PlayAudioSegment(4f, 2f);
                 StartCoroutine(CloseDoor());
             }
             else
             {
+                PlayAudioSegment(1f, 3f);
                 StartCoroutine(OpenDoor());
             }
         }
@@ -57,7 +60,7 @@ public class ClosetController : MonoBehaviour
     {
         isOpened = true;
 
-        
+
         // Smoothly rotate the door using the pivot
         while (Quaternion.Angle(pivot.localRotation, openedRotation) > precisionThreshold)
         {
@@ -68,7 +71,7 @@ public class ClosetController : MonoBehaviour
         // Snap to the final rotation to avoid overshooting
         pivot.localRotation = openedRotation;
 
-        
+
     }
 
     IEnumerator CloseDoor()
@@ -86,5 +89,23 @@ public class ClosetController : MonoBehaviour
         // Snap to the final closed rotation
         pivot.localRotation = closedRotation;
 
+    }
+    void PlayAudioSegment(float startTime, float duration)
+    {
+        if (audioSource != null && audioSource.clip != null)
+        {
+            audioSource.time = startTime; // 設置播放開始時間
+            audioSource.Play(); // 播放音效
+            StartCoroutine(StopAudioAfterDuration(duration));
+        }
+    }
+
+    IEnumerator StopAudioAfterDuration(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        if (audioSource.isPlaying)
+        {
+            audioSource.Stop(); // 停止音效播放
+        }
     }
 }

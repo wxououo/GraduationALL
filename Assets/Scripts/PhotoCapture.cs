@@ -26,8 +26,8 @@ public class PhotoCapture : MonoBehaviour
     public int photoHeight = 600;
 
     [SerializeField] private CanvasGroup photoCanvasGroup;
-[SerializeField] private float fadeDuration = 1.0f;
-[SerializeField] private float displayTime = 3.0f;
+    [SerializeField] private float fadeDuration = 1.0f;
+    [SerializeField] private float displayTime = 3.0f;
     private void Awake()
     {
         if (photoFrame.activeInHierarchy)
@@ -40,11 +40,38 @@ public class PhotoCapture : MonoBehaviour
             photoCanvasGroup = photoFrame.GetComponent<CanvasGroup>();
             photoFrame.SetActive(false);  // 還原
         }
+        InitializePhotoDisplayArea();
     }
+    void InitializePhotoDisplayArea()
+    {
+        Texture2D dummy = new Texture2D(2, 2);
+        Sprite dummySprite = Sprite.Create(dummy, new Rect(0, 0, 2, 2), new Vector2(0.5f, 0.5f), 100.0f);
+        photoDisplayArea.sprite = dummySprite;
 
-
-    // 給 UI Button 呼叫這個方法
-    public void TakePhotoButton()
+        photoFrame.SetActive(true);
+        LayoutRebuilder.ForceRebuildLayoutImmediate(photoDisplayArea.rectTransform);
+        photoFrame.SetActive(false);
+    }
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (cameraObject != null && cameraObject.activeInHierarchy)
+            {
+                photoFrame.SetActive(false);
+                if (!viewPhoto)
+                {
+                    StartCoroutine(CapturePhoto());
+                }
+                else
+                {
+                    RemovePhoto();
+                }
+            }
+        }
+    }
+        // 給 UI Button 呼叫這個方法
+        public void TakePhotoButton()
     {
         Debug.Log("👉 拍照按鈕被點了");
         if (!viewPhoto && cameraObject.activeInHierarchy)
@@ -65,7 +92,7 @@ public class PhotoCapture : MonoBehaviour
 
         // 拍照截圖（無論有沒有拍到 PhotoTarget 都執行）
         Texture2D screenCapture = new Texture2D(photoWidth, photoHeight, TextureFormat.RGB24, false);
-        Rect regionToRead = new Rect((Screen.width - photoWidth) / 2, (Screen.height - photoHeight) / 2, photoWidth, photoHeight);
+        Rect regionToRead = new Rect((Screen.width - photoWidth)/2, (Screen.height - photoHeight)/2, photoWidth, photoHeight);
         screenCapture.ReadPixels(regionToRead, 0, 0, false);
         screenCapture.Apply();
 
@@ -102,6 +129,7 @@ public class PhotoCapture : MonoBehaviour
         if (target.rewardPrefab != null)
         {
             SavePrefabAsItem(target.rewardPrefab, hit.transform, target.itemName);
+            Debug.Log("預設。");
         }
         else
         {
@@ -110,6 +138,7 @@ public class PhotoCapture : MonoBehaviour
             {
                 SavePhotoAsItem(overrideTex, hit.transform, target.photoName);
                 ShowPhoto(overrideTex); // 替換顯示圖為指定圖片
+                Debug.Log("硬存。");
             }
             else
             {
@@ -155,13 +184,32 @@ public class PhotoCapture : MonoBehaviour
 
     void SavePhotoAsItem(Texture2D photoTexture, Transform targetObject, string photoName)
     {
-        // 创建一个新照片道具并设置其名称和图标
-        Item photoItem = new Item();
-        photoItem.name = photoName; // 使用传入的物体名称
+        PhotoTarget photoTarget = targetObject.GetComponent<PhotoTarget>();
+        if (photoTarget == null)
+        {
+            Debug.LogError("找不到 PhotoTarget 組件！");
+            return;
+        }
+
+        // 從 InventoryManager 的 allItems 中找到對應 ID 的物品模板
+        Item templateItem = inventoryManager.allItems.Find(item => item.id == photoTarget.itemID);
+        if (templateItem == null)
+        {
+            Debug.LogError($"找不到 ID 為 {photoTarget.itemID} 的物品模板！");
+            return;
+        }
+        Item photoItem = ScriptableObject.CreateInstance<Item>();
+        // 複製模板物品的所有屬性
+        photoItem.id = templateItem.id;
+        photoItem.itemName = templateItem.itemName;
+        photoItem.isPuzzlePiece = templateItem.isPuzzlePiece;
+        photoItem.description = templateItem.description;
+        photoItem.prefab = templateItem.prefab;
+        photoItem.introductionImage = templateItem.introductionImage;
+        photoItem.rewardPrefab = templateItem.rewardPrefab;
+
         photoItem.icon = Sprite.Create(photoTexture, new Rect(0.0f, 0.0f, photoTexture.width, photoTexture.height), new Vector2(0.5f, 0.5f), 100.0f);
 
-        // 設定物品名稱
-        photoItem.itemName = photoName;
 
         // 将照片道具添加到清单
         capturedPhotos.Add(photoItem);

@@ -14,11 +14,11 @@ public class ResetController : MonoBehaviour
         PlayerPrefs.SetInt("IsTVPlayed", 0);
         PlayerPrefs.SetInt(BoxLidStateKey, 0);
         ResetInventory();
+
         foreach (var itemPickup in FindObjectsOfType<ItemPickup>())
         {
             itemPickup.ResetItem(); // 回到初始狀態
         }
-
 
         ResetPuzzlePieces();
         foreach (var revealZone in FindObjectsOfType<RevealZone>())
@@ -32,9 +32,14 @@ public class ResetController : MonoBehaviour
         {
             boxLid.ResetLidState(); // 假設 ResetLidState 是控制箱子蓋子重置的方法
         }
-        if (photoCapture != null)
+        PlayerPrefs.DeleteKey("CapturedPhotos");
+        PlayerPrefs.DeleteKey("PhotographedObjects");
+        foreach (string key in PlayerPrefs.GetString("CapturedPhotos", "").Split(','))
         {
-            //photoCapture.DeleteAllCapturedPhotos();
+            if (!string.IsNullOrEmpty(key))
+            {
+                PlayerPrefs.DeleteKey("Photo_" + key);
+            }
         }
         PlayerPrefs.Save();
         Debug.Log("遊戲已重置！");
@@ -43,19 +48,26 @@ public class ResetController : MonoBehaviour
         SceneManager.LoadScene(currentScene.name);
     }
 
-
     private void ResetInventory()
     {
-        int itemCount = PlayerPrefs.GetInt("ItemCount", 0);
+        Debug.Log("正在重置物品欄...");
 
-        for (int i = 0; i < itemCount; i++)
+        // 清除 InventoryData
+        PlayerPrefs.DeleteKey("InventoryData");
+        PlayerPrefs.Save();
+
+        // 清除 InventoryManager 中的所有物品
+        if (InventoryManager.Instance != null)
         {
-            PlayerPrefs.DeleteKey("Item_" + i);
+            InventoryManager.Instance.Items.Clear();
+            InventoryManager.Instance.ListItems();  // 更新 UI 顯示
+            Debug.Log("已清除 InventoryManager 中的所有物品");
         }
-
-        PlayerPrefs.DeleteKey("ItemCount");
+        else
+        {
+            Debug.LogWarning("InventoryManager.Instance 未設置！");
+        }
     }
-
     private void ResetPuzzlePieces()
     {
         // Find all puzzle pieces in the scene
@@ -86,11 +98,7 @@ public class ResetController : MonoBehaviour
                     Destroy(child.gameObject);
                 }
             }
-
-            // Update the slot's occupied state
             slot.SetToOccupied(false);
-
-            // Clear any saved slot states
             PlayerPrefs.DeleteKey($"Slot_{slot.slotID}_Occupied");
         }
 
@@ -100,7 +108,6 @@ public class ResetController : MonoBehaviour
     private void ResetPhotoSlots()
     {
         PhotoSlot[] photoSlots = FindObjectsOfType<PhotoSlot>();
-
         foreach (PhotoSlot slot in photoSlots)
         {
             slot.ResetSlot();

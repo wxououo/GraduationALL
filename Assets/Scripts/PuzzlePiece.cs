@@ -140,7 +140,7 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
         Vector3 worldPosition = playerCamera.ScreenToWorldPoint(screenPosition);
 
         // 直接從 worldPosition 發 OverlapSphere
-        Collider[] hitColliders = Physics.OverlapSphere(worldPosition, 700.0f);
+        Collider[] hitColliders = Physics.OverlapSphere(worldPosition, 900.0f);
         Debug.Log($"OverlapSphere 從 {worldPosition} 找到 {hitColliders.Length} 個 Collider。");
 
         foreach (Collider hitCollider in hitColliders)

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75fc6ff20ff49ff44bf9933018154cef, type: 3}
   m_Name: hairPhoto
   m_EditorClassIdentifier: 
-  id: 0
+  id: 12
   itemName: "\u68B3\u982D\u7167"
   icon: {fileID: 21300000, guid: 82211b89eb311b64988dcb403fc13c1e, type: 3}
   prefab: {fileID: 0}
