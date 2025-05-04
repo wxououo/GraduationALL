@@ -13,4 +13,5 @@ public class Item : ScriptableObject
     public string description;
     public Sprite introductionImage;
     public GameObject rewardPrefab;
+    public List<Sprite> introductionImages = new List<Sprite>();
 }

@@ -40,6 +40,8 @@ public class InventoryManager : MonoBehaviour
     private Item currentDisplayedItem;
     private GameObject currentSpawnedObject = null;  // 目前生成在場景的物件
 
+    private int currentIntroIndex = 0;
+
     void Start()
     {
         // 獲取主相機上的 MouseLook 腳本
@@ -266,6 +268,16 @@ public class InventoryManager : MonoBehaviour
     public void ShowIntroduction(Item item)
     {
         CloseIntroduction();
+        currentDisplayedItem = item;
+        currentIntroIndex = 0;
+        if (item.introductionImages != null && item.introductionImages.Count > 0)
+        {
+            introductionImageUI.sprite = item.introductionImages[0];
+        }
+        else if (item.introductionImage != null)
+        {
+            introductionImageUI.sprite = item.introductionImage;
+        }
         if (introductionImageUI != null && closeButton != null)
         {
             introductionImageUI.sprite = item.introductionImage;
@@ -276,8 +288,16 @@ public class InventoryManager : MonoBehaviour
         // 記錄目前展示的 item
         currentDisplayedItem = item;
     }
+    public void OnIntroductionImageClick()
+    {
+        Debug.Log(" Image clicked!");
+        if (currentDisplayedItem == null) return;
+        if (currentDisplayedItem.introductionImages == null || currentDisplayedItem.introductionImages.Count <= 1) return;
 
-public void TakeOutItem(Item item)
+        currentIntroIndex = (currentIntroIndex + 1) % currentDisplayedItem.introductionImages.Count;
+        introductionImageUI.sprite = currentDisplayedItem.introductionImages[currentIntroIndex];
+    }
+    public void TakeOutItem(Item item)
 {
     // ⭐ 如果已經有展示的圖片，先回收
     CloseIntroduction();
