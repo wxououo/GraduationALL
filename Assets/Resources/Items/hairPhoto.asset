@@ -15,8 +15,10 @@ MonoBehaviour:
   id: 12
   itemName: "\u68B3\u982D\u7167"
   icon: {fileID: 21300000, guid: 82211b89eb311b64988dcb403fc13c1e, type: 3}
-  prefab: {fileID: 0}
+  prefab: {fileID: 8298080840757794096, guid: 94bfef5b038a9f44fbaffdde0d9bf9ac, type: 3}
   isPuzzlePiece: 0
   description: 
   introductionImage: {fileID: 21300000, guid: de0bfe6c336afc64692dc1d15d49bc6d, type: 3}
-  rewardPrefab: {fileID: 0}
+  rewardPrefab: {fileID: 8298080840757794096, guid: 94bfef5b038a9f44fbaffdde0d9bf9ac,
+    type: 3}
+  introductionImages: []

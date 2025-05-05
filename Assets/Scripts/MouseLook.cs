@@ -56,6 +56,12 @@ public class MouseLook : MonoBehaviour
         Cursor.visible = true;
         originalPosition = Camera.main.transform.position;
         originalRotation = Camera.main.transform.rotation;
+        if (!PlayerPrefs.HasKey("IntroShown"))
+        {
+            DialogueManager.Instance.ShowDialogue("……怎麼又是那個夢,\n那個男人到底是誰?");
+            PlayerPrefs.SetInt("IntroShown", 1);
+            PlayerPrefs.Save();
+        }
     }
 
     void Update()
@@ -95,6 +101,13 @@ public class MouseLook : MonoBehaviour
             float mouseDistance = Vector3.Distance(initialMousePosition, Input.mousePosition);
             if (mouseDistance <= clickThreshold) // 若滑鼠移動距離小於閾值，才執行點擊
             {
+                if (EventSystem.current.IsPointerOverGameObject())
+                {
+                    Debug.Log("A");
+                    // 點到了 UI，什麼都不做
+                    return;
+
+            }
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                 RaycastHit hit;
                 if (Physics.Raycast(ray, out hit))

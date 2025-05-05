@@ -13,6 +13,8 @@ public class ResetController : MonoBehaviour
         PlayerPrefs.SetInt("IsUnlocked", 0);
         PlayerPrefs.SetInt("IsTVPlayed", 0);
         PlayerPrefs.SetInt(BoxLidStateKey, 0);
+
+        ResetIntroFlag();
         ResetInventory();
 
         foreach (var itemPickup in FindObjectsOfType<ItemPickup>())
@@ -113,4 +115,9 @@ public class ResetController : MonoBehaviour
             slot.ResetSlot();
         }
     }
+    private void ResetIntroFlag()
+    {
+        PlayerPrefs.DeleteKey("IntroShown");
+    }
+
 }

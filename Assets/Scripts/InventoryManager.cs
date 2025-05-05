@@ -399,7 +399,7 @@ public class InventoryManager : MonoBehaviour
             {
                 id = item.id,
                 itemName = item.itemName,
-                isPuzzlePiece = item.isPuzzlePiece,
+                isPuzzlePiece = item.isPuzzlePiece != true ? item.isPuzzlePiece:false,
                 prefabPath = item.prefab != null ? item.prefab.name : null,
                 description = item.description ?? null,
                 introductionImagePath = item.introductionImage != null ? item.introductionImage.name : null,

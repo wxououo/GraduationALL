@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class PhotoCapture : MonoBehaviour
 {
@@ -54,6 +55,10 @@ public class PhotoCapture : MonoBehaviour
     }
     private void Update()
     {
+        // 只有在滑鼠沒有碰到 UI 時才處理 3D 點擊
+        if (Input.GetMouseButtonDown(0))
+        {
+        }
         if (Input.GetKeyDown(KeyCode.Space))
         {
             if (cameraObject != null && cameraObject.activeInHierarchy)
