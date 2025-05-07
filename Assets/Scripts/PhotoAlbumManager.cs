@@ -24,10 +24,10 @@ public class PhotoAlbumManager : MonoBehaviour
         Instance = this;
 
         // 載入影片素材
-        photoIdToVideoClip[0] = Resources.Load<VideoClip>("Video/Marry0422");
-        photoIdToVideoClip[1] = Resources.Load<VideoClip>("Videos/clipB");
-        photoIdToVideoClip[2] = Resources.Load<VideoClip>("Videos/clipA");
-        photoIdToVideoClip[3] = Resources.Load<VideoClip>("Videos/clipB");
+        photoIdToVideoClip[13] = Resources.Load<VideoClip>("Videos/family0422");
+        photoIdToVideoClip[12] = Resources.Load<VideoClip>("Videos/hairclip0422");
+        photoIdToVideoClip[15] = Resources.Load<VideoClip>("Videos/candybox0424");
+        photoIdToVideoClip[11] = Resources.Load<VideoClip>("Videos/Maeey0422");
 
         // 確保一開始影片不顯示
         if (VideoDisplay != null)

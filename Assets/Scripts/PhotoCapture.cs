@@ -107,7 +107,7 @@ public class PhotoCapture : MonoBehaviour
         // 嘗試偵測目標物件
         int layerMask = LayerMask.GetMask("PhotoTargetLayer");
         RaycastHit hit;
-        bool itemDetected = Physics.Raycast(cameraObject.transform.position, cameraObject.transform.forward, out hit, 5000.0f, layerMask);
+        bool itemDetected = Physics.Raycast(cameraObject.transform.position, cameraObject.transform.forward, out hit, 50000.0f, layerMask);
 
         if (!itemDetected) yield break;
 
@@ -121,6 +121,7 @@ public class PhotoCapture : MonoBehaviour
         foreach (var col in nearbyColliders)
         {
             PuzzleSlot slot = col.GetComponentInChildren<PuzzleSlot>();
+            Debug.Log("有puzzleSlot");
             if (slot != null) nearbySlots.Add(slot);
         }
 

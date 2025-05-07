@@ -89,6 +89,7 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        Debug.Log($"[OnBeginDrag] Triggered on: {gameObject.name}", gameObject);
         // 開始拖
         FindObjectOfType<MouseLook>().SetDraggingState(true);
 
@@ -136,11 +137,11 @@ public class PuzzlePiece : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndD
 
         // ★★★【超穩：轉換滑鼠座標到世界座標】★★★
         Vector3 screenPosition = Input.mousePosition;
-        screenPosition.z = 200.0f; // 你可以調整這個距離（要讓z稍微前一點才打得到）
+        screenPosition.z = 500.0f; // 你可以調整這個距離（要讓z稍微前一點才打得到）
         Vector3 worldPosition = playerCamera.ScreenToWorldPoint(screenPosition);
 
         // 直接從 worldPosition 發 OverlapSphere
-        Collider[] hitColliders = Physics.OverlapSphere(worldPosition, 900.0f);
+        Collider[] hitColliders = Physics.OverlapSphere(worldPosition, 1000.0f);
         Debug.Log($"OverlapSphere 從 {worldPosition} 找到 {hitColliders.Length} 個 Collider。");
 
         foreach (Collider hitCollider in hitColliders)

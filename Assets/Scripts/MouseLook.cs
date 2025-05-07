@@ -47,7 +47,9 @@ public class MouseLook : MonoBehaviour
     public void SetDraggingState(bool state)
     {
         isDraggingButton = state;
-        Debug.Log("Dragging State Changed: " + isDraggingButton + " at " + Time.time);
+        //Debug.Log("Dragging State Changed: " + isDraggingButton + " at " + Time.time);
+        System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
+        Debug.Log("Call Stack:\n" + stackTrace.ToString());
         if (state) Debug.Log("目前拖曳物件：" + EventSystem.current.currentSelectedGameObject);
     }
 
@@ -103,11 +105,23 @@ public class MouseLook : MonoBehaviour
             {
                 if (EventSystem.current.IsPointerOverGameObject())
                 {
-                    Debug.Log("A");
-                    // 點到了 UI，什麼都不做
-                    return;
+                    PointerEventData pointerData = new PointerEventData(EventSystem.current)
+                    {
+                        position = Input.mousePosition
+                    };
+                    List<RaycastResult> raycastResults = new List<RaycastResult>();
+                    EventSystem.current.RaycastAll(pointerData, raycastResults);
 
-            }
+                    foreach (RaycastResult result in raycastResults)
+                    {
+                        if (result.gameObject.CompareTag("IgnoreZoomClick"))
+                        {
+                            Debug.Log("點擊在特定 UI 上，取消鏡頭操作");
+                            return;
+                        }
+                    }
+                }
+
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                 RaycastHit hit;
                 if (Physics.Raycast(ray, out hit))

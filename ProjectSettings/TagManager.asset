@@ -11,6 +11,7 @@ TagManager:
   - Pickup
   - PhotoSlot
   - RevealTrigger
+  - IgnoreZoomClick
   layers:
   - Default
   - TransparentFX
