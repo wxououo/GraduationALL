@@ -20,6 +20,7 @@ public class ClickToTriggerStory : MonoBehaviour
         gameObject.SetActive(false);
 
         // 顯示劇情 UI
+        DialogueManager.Instance.ShowDialogue("啊,弄掉了...");
         if (objectToReveal != null)
             objectToReveal.SetActive(true);
     }

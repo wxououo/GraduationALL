@@ -27,7 +27,7 @@ public class PhotoAlbumManager : MonoBehaviour
         photoIdToVideoClip[13] = Resources.Load<VideoClip>("Videos/family0422");
         photoIdToVideoClip[12] = Resources.Load<VideoClip>("Videos/hairclip0422");
         photoIdToVideoClip[15] = Resources.Load<VideoClip>("Videos/candybox0424");
-        photoIdToVideoClip[11] = Resources.Load<VideoClip>("Videos/Maeey0422");
+        photoIdToVideoClip[11] = Resources.Load<VideoClip>("Videos/Marry0422");
 
         // 確保一開始影片不顯示
         if (VideoDisplay != null)

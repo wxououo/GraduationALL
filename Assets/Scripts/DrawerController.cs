@@ -68,11 +68,11 @@ public class DrawerController : MonoBehaviour
         // 根據抽屜狀態，設置抽屜的位置
         if (isOpened)
         {
-            transform.Translate(-10f, 0f, 0f); // 向前移動一定距離
+            transform.Translate(-200f, 0f, 0f); // 向前移動一定距離
         }
         else
         {
-            transform.Translate(10f, 0f, 0f); // 向後移動一定距離
+            transform.Translate(200f, 0f, 0f); // 向後移動一定距離
         }
     }
 }
