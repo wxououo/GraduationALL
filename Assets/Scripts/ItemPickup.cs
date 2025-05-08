@@ -45,6 +45,15 @@ public class ItemPickup : MonoBehaviour
             audioSource.bypassListenerEffects = true; // 跳過監聽器效果
             audioSource.bypassReverbZones = true; // 跳過混響區域
         }
+        if (itemToDisplayOnPickup != null)
+        {
+            int isActivated = PlayerPrefs.GetInt( "CameraIcon", 0);
+            if (isActivated == 1)
+            {
+                itemToDisplayOnPickup.SetActive(true);
+                gameObject.SetActive(false);
+            }
+        }
     }
     public void UnlockItem()
     {
@@ -68,8 +77,12 @@ public class ItemPickup : MonoBehaviour
         if (itemToDisplayOnPickup != null)
         {
             itemToDisplayOnPickup.SetActive(true);
+            PlayerPrefs.SetInt( "CameraIcon", 1);
+            PlayerPrefs.Save();
+
             gameObject.SetActive(false);
         }
+
         // 檢查道具是否已經在道具欄中
         if (InventoryManager.Instance.Items.Contains(Item))
         {

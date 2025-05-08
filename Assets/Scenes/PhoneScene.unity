@@ -2314,12 +2314,13 @@ MonoBehaviour:
   - -120
   - -90
   - 0
-  correctCode: 1109
+  correctCode: 119
   rotationSpeed: 250
   waitTime: 0.5
   originalSceneName: Old
   numberButtons: []
-  rotateSound: {fileID: 0}
+  rotateSound: {fileID: 8300000, guid: bb2fa99ca92368a4bb5d84f7d2afb7a5, type: 3}
+  unlockSound: {fileID: 8300000, guid: 6f5da7987fdbe9b4f88bae609c4ace69, type: 3}
 --- !u!1 &1084122104
 GameObject:
   m_ObjectHideFlags: 0

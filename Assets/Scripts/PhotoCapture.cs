@@ -139,6 +139,11 @@ public class PhotoCapture : MonoBehaviour
         }
         else
         {
+            if (hit.transform.CompareTag("Interactable") && PlayerPrefs.GetInt("IsTVPlayed", 0) != 1)
+            {
+                Debug.Log("拍攝的物件需要播放電視才能拍成功！");
+                yield break;
+            }
             Texture2D overrideTex = Resources.Load<Texture2D>(target.overridePhotoResourceName);
             if (overrideTex != null)
             {

@@ -37,7 +37,7 @@ public class MouseLook : MonoBehaviour
 
     // 控制道具欄是否開啟的變數
     private bool isInventoryOpen = false;
-
+    private GameObject mirrorObject;
     //public void SetInventoryState(bool state)
     //{
     //    isInventoryOpen = state;
@@ -58,6 +58,7 @@ public class MouseLook : MonoBehaviour
         Cursor.visible = true;
         originalPosition = Camera.main.transform.position;
         originalRotation = Camera.main.transform.rotation;
+        mirrorObject = GameObject.Find("mirror (2)");
         if (!PlayerPrefs.HasKey("IntroShown"))
         {
             DialogueManager.Instance.ShowDialogue("……怎麼又是那個夢,\n那個男人到底是誰?");
@@ -137,7 +138,18 @@ public class MouseLook : MonoBehaviour
                         Camera.main.transform.rotation = zoomTarget.rotation;
                         hasAdjustedCamera = true;
                         //isZooming = true;
-
+                        if (hit.transform.name == "dressing_table")
+                        {
+                            // 啟用 mirror(2) 的可見性
+                            if (mirrorObject != null)
+                            {
+                                MirrorVisibility mirrorVisibility = mirrorObject.GetComponent<MirrorVisibility>();
+                                if (mirrorVisibility != null)
+                                {
+                                    mirrorVisibility.SetVisibility(true);
+                                }
+                            }
+                        }
                         zoomBaseRotation = transform.eulerAngles; // 記錄當下角度作為限制中心
                     }
                 }
@@ -150,6 +162,14 @@ public class MouseLook : MonoBehaviour
             Camera.main.transform.position = lastAdjustedPosition;
             Camera.main.transform.rotation = lastAdjustedRotation;
             hasAdjustedCamera = false;
+            if (mirrorObject != null)
+            {
+                MirrorVisibility mirrorVisibility = mirrorObject.GetComponent<MirrorVisibility>();
+                if (mirrorVisibility != null)
+                {
+                    mirrorVisibility.SetVisibility(false);
+                }
+            }
         }
 
         // 拖動視角

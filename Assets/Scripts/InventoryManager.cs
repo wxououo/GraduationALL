@@ -228,6 +228,7 @@ public class InventoryManager : MonoBehaviour
             Debug.Log($"Hit object: {hitCollider.gameObject.name}");
             if (hitCollider.CompareTag("Puzzle")) // Replace with your correct slot tag
             {
+                Debug.Log("A");
                 obj.transform.position = hitCollider.transform.position;
 
                 PuzzlePiece puzzlePiece = obj.GetComponent<PuzzlePiece>();
